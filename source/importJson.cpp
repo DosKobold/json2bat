@@ -1,10 +1,8 @@
-//-ljsoncpp --std=c++20
+//-ljsoncpp 
 
 #include <iostream>
 #include <string>
 #include <list>
-#include <ranges>
-#include <tuple>
 #include <getopt.h>
 #include <fstream>
 #include <filesystem>
@@ -67,11 +65,10 @@ int jsonFile::convertJson(std::string inFile) {
 	for(auto command : commands) {
 		output << command << " && "; //&& is dangerous, when there is only ONE element
 	}
-	/*for(auto key : keys) {
-		output << "set " << key << '=' << " && "; //<< value;
-	}*/
-	for(std::tuple<std::string&, std::string&> i : std::ranges::view::zip(keys, values)){
-		//std::cout << key << value;
+	std::list<std::string>::iterator key = keys.begin();
+	std::list<std::string>::iterator value = values.begin();
+	for(; key!=keys.end() && value!=values.end(); ++key, ++value) {
+		output << "set " << *key << '=' << *value << " && ";
 	}
 	output << "set path=";
 	for(auto path : paths) {
@@ -79,11 +76,10 @@ int jsonFile::convertJson(std::string inFile) {
 	}
 	output << "\%path\%\"" << " @ECHO ON";
 	
-
 	return 0;
 }
 
-//Complete function has to be changed, cause of putting data into lists
+//Complete function has to be changed, cause of putting data into lists + is shit because of 2nd iteration!!!
 void jsonFile::verbose() {
 	std::cout << "Content of the file:" << std::endl;
 	std::cout << outFile.asString() << std::endl;
@@ -109,6 +105,8 @@ void jsonFile::verbose() {
 //----- Main -----
 
 int main(int argc, char *argv[]) {
+	std::cout << "json2bat-converter prototype v0" << std::endl;
+
 	struct option long_options[] = {
 		{"help", no_argument, 0, 'h'},
 		{0, required_argument, 0, 0},
