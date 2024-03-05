@@ -1,2 +1,11 @@
- json2bat
-----------
+  json2bat
++----------+
+
+
+  Build
++-------+
+
+To build the project, execute the following commands:
+
+1. cmake -B bin
+2. cmake --build bin
