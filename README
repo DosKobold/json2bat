@@ -7,5 +7,5 @@
 
 To build the project, execute the following commands:
 
-1. cmake -B bin
-2. cmake --build bin
+1. cmake -B build
+2. cmake --build build
