@@ -3,11 +3,17 @@
 
 #include <string>
 
-class jsonFile {
+class Converter {
 	public:
-		int convertJson(std::string inFile);
-		void verbose();
+		Converter();
+
+		int8_t parse_json(std::string);
+		int8_t write_bat();
+		void fverbose();
+		void set_verbose(bool);
 	private:
+		bool verbose;
+
 		Json::Reader reader;
 		Json::Value object;
 
@@ -20,8 +26,5 @@ class jsonFile {
 		std::list<std::string> values;
 		std::list<std::string> paths;
 };
-
-int convertJson(std::string);
-void verbose();
 
 #endif /* JSONFILE_HXX_ */

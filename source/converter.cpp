@@ -6,20 +6,26 @@
 #include <string>
 #include <json/json.h>
 
-#include "jsonFile.h"
+#include "converter.h"
 
-int
-jsonFile::convertJson(std::string inFile)
+Converter::Converter()
+{
+	verbose = true;
+}
+
+int8_t
+Converter::parse_json(std::string inFile)
 {
 	std::ifstream input(inFile);
+
 	if (!reader.parse(input, object)) {
 		std::cout << "ERROR: Could not parse file into object!" << std::endl;
 		return 1;
 	}
 
-	outFile = object["outputfile"];
+	outFile   = object["outputfile"];
 	hideshell = object["hideshell"];
-	entries = object["entries"];
+	entries   = object["entries"];
 
 	for (auto entry : entries) {
 		if (entry["type"].asString() == "EXE") {
@@ -32,22 +38,40 @@ jsonFile::convertJson(std::string inFile)
 		}
 	}
 
+	return 0;
+}
+
+int8_t
+Converter::write_bat()
+{
+	bool first = true;
 	std::ofstream output(outFile.asString());
+
+	/* Basic setup */
 	output << "@ECHO OFF " << "C:\\Windows\\System32\\cmd.exe ";
 	if (hideshell.asString() == "true") {
 		output << "/c \"";
 	} else {
 		output << "/k \"";
 	}
+
+	/* Take care of EXE instructions */
 	for (auto command : commands) {
-		output << command << " && "; //&& is dangerous, when there is only ONE element
+		if (!first)
+			output << " && ";
+		output << command;
+		first = false;
 	}
+
+	/* Take care of ENV instructions */
 	std::list<std::string>::iterator key = keys.begin();
 	std::list<std::string>::iterator value = values.begin();
 	for (; key!=keys.end() && value!=values.end(); ++key, ++value) {
-		output << "set " << *key << '=' << *value << " && ";
+		output << " && set " << *key << '=' << *value;
 	}
-	output << "set path=";
+
+	/* Take care of PATH instructions */
+	output << " && set path=";
 	for (auto path : paths) {
 		output << path << ';';
 	}
@@ -56,9 +80,15 @@ jsonFile::convertJson(std::string inFile)
 	return 0;
 }
 
+void
+Converter::set_verbose(bool v)
+{
+	verbose = v;
+}
+
 //Complete function has to be changed, cause of putting data into lists + is shit because of 2nd iteration!!!
 void
-jsonFile::verbose()
+Converter::fverbose()
 {
 	std::cout << "Content of the file:" << std::endl;
 	std::cout << outFile.asString() << std::endl;
