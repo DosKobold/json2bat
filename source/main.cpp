@@ -4,7 +4,7 @@
 #include <getopt.h>
 #include <fstream>
 #include <filesystem>
-#include <json/json.h>
+#include <jsoncpp/json/json.h>
 
 #include "jsonFile.h"
 
