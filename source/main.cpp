@@ -12,9 +12,13 @@ static void
 help()
 {
 	std::cerr << "Usage: json2bat [options] [files...]\n"
-	    "options:\n\t-h, --help print this message and exit\n"
-	    "Authoren:\n\tTom Schwindl\t<a@a.com>\n"
-	    "\tPaul Stoeckle\t<a@a.com>\n"
+	    "Options:\n"
+	    "\t-h, --help print this message and exit\n"
+	    "\t-c, --console print the ouput only to the console\n"
+	    "\t-f, --format  print the input information to the console\n"
+	    "Authors:\n"
+	    "\tTom Schwindl\t<a@a.com>\n"
+	    "\tPaul Stoeckle\t<paul.stoeckle@t-online.de>\n"
 	    "\tElias Schnick\t<a@a.com>\n"
 	    "\tBen Oeckl\t<a@a.com>\n"
 	<< std::endl;
@@ -23,7 +27,6 @@ help()
 int
 main(int argc, char *argv[])
 {
-	std::cout << "json2bat-converter prototype v0" << std::endl;
 	bool fflag = false;
 	int opt;
 	int option_index = 0;
@@ -33,7 +36,7 @@ main(int argc, char *argv[])
 		{"help",    no_argument,       0, 'h'},
 		{"console", no_argument,       0, 'c'},
 		{"format",  no_argument,       0, 'f'},
-		{0,         required_argument, 0,  0 },
+		{0,         0,                 0,  0 },
 	};
 
 	while ((opt = getopt_long(argc, argv, "hcf", long_options, &option_index)) != -1) {
@@ -55,18 +58,18 @@ main(int argc, char *argv[])
 	argv += optind;
 
 	if (argc == 0) {
-		std::cerr << "missing file" << std::endl;
+		std::cerr << "ERROR: No file given!" << std::endl;
 		return 1;
 	}
 
 	for (; *argv; ++argv) {
 		if (std::filesystem::exists(*argv)) {
 			if (converter.parse_json(*argv) || converter.write_bat()) {
-				std::cout << "ERROR: Could not convert json to batch!" << std::endl;
+				std::cerr << "ERROR: Could not convert json to batch!" << std::endl;
 				continue;
 			}
 		} else {
-			std::cout << "ERROR: The given file does not exist!" << std::endl;
+			std::cerr << "ERROR: The given file does not exist!" << std::endl;
 			continue;
 		}
 		if (fflag) {

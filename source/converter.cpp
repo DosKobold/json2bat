@@ -20,7 +20,7 @@ Converter::parse_json(std::string inFile)
 	std::ifstream input(inFile);
 
 	if (!reader.parse(input, object)) {
-		std::cout << "ERROR: Could not parse file into object!" << std::endl;
+		std::cerr << "ERROR: Could not parse file into object!" << std::endl;
 		return 1;
 	}
 
