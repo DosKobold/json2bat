@@ -24,8 +24,13 @@ Converter::parse_json(std::string inFile)
 		return 1;
 	}
 
-	outFile   = object["outputfile"];
-	hideshell = object["hideshell"];
+	/* Make sure overwrite() works. */
+	if (!outFile)
+		outFile   = object["outputfile"];
+	if (!hideshell)
+		hideshell = object["hideshell"];
+	if (!application)
+		application = object["application"];
 	entries   = object["entries"];
 
 	for (auto entry : entries) {
@@ -121,4 +126,27 @@ Converter::outfmt()
 	for (auto path : paths) {
 		std::cout << "PATH | " << path << std::endl;
 	}
+}
+
+bool
+Converter::overwrite(char *arg)
+{
+	char *eq;
+
+	if (!*arg && *arg != '=')
+		return false;
+
+	eq = strchr(arg, '=');
+	if (!eq || !eq[1])
+		return false;
+	*eq++ = '\0';
+
+	if (!std::strcmp(arg, "hideshell"))
+		this->hideshell = (!std::strcmp(eq, "true")) ? "true" : "false";
+	else if (!std::strcmp(arg, "outputfile"))
+		this->outFile = eq;
+	else if (!std::strcmp(arg, "application"))
+		this->application = eq;
+
+	return true;
 }

@@ -11,6 +11,7 @@ class Converter {
 		int8_t write_bat();
 		void outfmt();
 		void to_file(bool);
+		bool overwrite(char *);
 	private:
 		bool toFile;
 
@@ -21,6 +22,7 @@ class Converter {
 
 		Json::Value outFile;
 		Json::Value hideshell;
+		Json::Value application;
 		Json::Value entries;
 
 		std::list<std::string> commands;

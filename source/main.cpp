@@ -13,9 +13,13 @@ help()
 {
 	std::cerr << "Usage: json2bat [options] [files...]\n"
 	    "Options:\n"
-	    "\t-h, --help print this message and exit\n"
-	    "\t-c, --console print the ouput only to the console\n"
-	    "\t-f, --format  print the input information to the console\n"
+	    "\t-h, --help\tprint this message and exit\n"
+	    "\t-c, --console\tprint the ouput only to the console\n"
+	    "\t-f, --format\tprint the input information to the console\n"
+	    "\t-o, --overwrite\tchange the value of either 'hideshell',\n"
+	    "\t\t\t'outputfile' or 'application' in the generated file.\n"
+	    "\t\t\tOnly a single value can be overwritten at a time.\n"
+	    "\t\t\tExample: -o hideshell=true\n"
 	    "Authors:\n"
 	    "\tTom Schwindl\t<a@a.com>\n"
 	    "\tPaul Stoeckle\t<paul.stoeckle@t-online.de>\n"
@@ -33,19 +37,26 @@ main(int argc, char *argv[])
 	Converter converter;
 
 	struct option long_options[] = {
-		{"help",    no_argument,       0, 'h'},
-		{"console", no_argument,       0, 'c'},
-		{"format",  no_argument,       0, 'f'},
-		{0,         0,                 0,  0 },
+		{"help",      no_argument,       0, 'h'},
+		{"console",   no_argument,       0, 'c'},
+		{"format",    no_argument,       0, 'f'},
+		{"overwrite", required_argument, 0, 'o'},
+		{0,         0,                   0,  0 },
 	};
 
-	while ((opt = getopt_long(argc, argv, "hcf", long_options, &option_index)) != -1) {
+	while ((opt = getopt_long(argc, argv, "hcfo:", long_options, &option_index)) != -1) {
 		switch (opt) {
 			case 'c':
 				converter.to_file(false);
 				break;
 			case 'f':
 				fflag = true;
+				break;
+			case 'o':
+				if (!converter.overwrite(optarg)) {
+					std::cerr << "ERROR: Invalid value for overwrite" << std::endl;
+					return 1;
+				}
 				break;
 			case 'h':
 				help();
