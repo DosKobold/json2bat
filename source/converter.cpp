@@ -97,11 +97,13 @@ Converter::write_bat()
 	for (auto path : paths) {
 		output << path << ';';
 	}
-	
 	output << "\%path\%";
+
 	/* Take care of application */
-	output << " && start " << application; //ADD outputfile without .json
-	output << "\" @ECHO ON";
+	size_t dot = outFile.asString().find_last_of(".");
+	output << " && start \"" << outFile.asString().substr(0, dot) << "\" " \
+	    << application.asString();
+	output << "\" @ECHO ON\n";
 
 	return 0;
 }
