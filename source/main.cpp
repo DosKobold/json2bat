@@ -4,7 +4,7 @@
 #include <getopt.h>
 #include <fstream>
 #include <filesystem>
-#include <json/json.h>
+#include <jsoncpp/json/json.h>
 
 #include "converter.h"
 
@@ -59,6 +59,10 @@ main(int argc, char *argv[])
 			if (converter.parse_json(*argv) || converter.write_bat()) {
 				std::cout << "ERROR: Could not convert json to batch!" << std::endl;
 				continue;
+			}
+			//TESTING
+			else {
+				converter.fverbose();
 			}
 		} else {
 			std::cout << "ERROR: The given file does not exist!" << std::endl;

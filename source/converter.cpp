@@ -4,7 +4,7 @@
 #include <iostream>
 #include <list>
 #include <string>
-#include <json/json.h>
+#include <jsoncpp/json/json.h>
 
 #include "converter.h"
 
@@ -16,6 +16,8 @@ Converter::Converter()
 int8_t
 Converter::parse_json(std::string inFile)
 {
+	this->inFile = inFile;
+
 	std::ifstream input(inFile);
 
 	if (!reader.parse(input, object)) {
@@ -86,25 +88,22 @@ Converter::set_verbose(bool v)
 	verbose = v;
 }
 
-//Complete function has to be changed, cause of putting data into lists + is shit because of 2nd iteration!!!
 void
 Converter::fverbose()
 {
-	std::cout << "Content of the file:" << std::endl;
-	std::cout << outFile.asString() << std::endl;
-	std::cout << hideshell.asString() << std::endl;
+	std::cout << "Content of the file \"" << inFile << "\": " << std::endl;
+	std::cout << "Target name: " << outFile.asString() << std::endl;
+	std::cout << "Hideshell:   " << hideshell.asString() << std::endl;
 
-	for (auto entry : entries) {
-		std::cout << entry["type"].asString();
-		if (entry["type"] == "EXE") {
-			std::cout << " | " << entry["command"].asString();
-		} else if (entry["type"] == "ENV") {
-			std::cout << " | " << entry["key"].asString() << " | " << entry["value"].asString();
-		} else if (entry["type"] == "PATH") {
-			std::cout << " | " << entry["path"].asString();
-		} else {
-			std::cout << std::endl << "WARNING: There is unknown data in the json";
-		}
-		std::cout << std::endl;
+	for (auto command : commands) {
+		std::cout << "EXE  | " << command << std::endl;
+	}
+	std::list<std::string>::iterator key = keys.begin();
+	std::list<std::string>::iterator value = values.begin();
+	for (; key!=keys.end() && value!=values.end(); ++key, ++value) {
+		std::cout << "ENV  | " << *key << ' ' << *value << std::endl;
+	}
+	for (auto path : paths) {
+		std::cout << "PATH | " << path << std::endl;
 	}
 }

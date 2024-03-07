@@ -14,6 +14,8 @@ class Converter {
 	private:
 		bool verbose;
 
+		std::string inFile;
+
 		Json::Reader reader;
 		Json::Value object;
 
