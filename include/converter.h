@@ -9,10 +9,10 @@ class Converter {
 
 		int8_t parse_json(std::string);
 		int8_t write_bat();
-		void fverbose();
-		void set_verbose(bool);
+		void outfmt();
+		void to_file(bool);
 	private:
-		bool verbose;
+		bool toFile;
 
 		std::string inFile;
 

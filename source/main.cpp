@@ -24,20 +24,25 @@ int
 main(int argc, char *argv[])
 {
 	std::cout << "json2bat-converter prototype v0" << std::endl;
+	bool fflag = false;
 	int opt;
 	int option_index = 0;
 	Converter converter;
 
 	struct option long_options[] = {
-		{"help",   no_argument,       0, 'h'},
-		{"silent", no_argument,       0, 's'},
-		{0,        required_argument, 0,  0 },
+		{"help",    no_argument,       0, 'h'},
+		{"console", no_argument,       0, 'c'},
+		{"format",  no_argument,       0, 'f'},
+		{0,         required_argument, 0,  0 },
 	};
 
-	while ((opt = getopt_long(argc, argv, "hs", long_options, &option_index)) != -1) {
+	while ((opt = getopt_long(argc, argv, "hcf", long_options, &option_index)) != -1) {
 		switch (opt) {
-			case 's':
-				converter.set_verbose(false);
+			case 'c':
+				converter.to_file(false);
+				break;
+			case 'f':
+				fflag = true;
 				break;
 			case 'h':
 				help();
@@ -60,13 +65,12 @@ main(int argc, char *argv[])
 				std::cout << "ERROR: Could not convert json to batch!" << std::endl;
 				continue;
 			}
-			//TESTING
-			else {
-				converter.fverbose();
-			}
 		} else {
 			std::cout << "ERROR: The given file does not exist!" << std::endl;
 			continue;
+		}
+		if (fflag) {
+			converter.outfmt();
 		}
 	}
 

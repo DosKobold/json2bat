@@ -10,14 +10,13 @@
 
 Converter::Converter()
 {
-	verbose = true;
+	toFile = true;
 }
 
 int8_t
 Converter::parse_json(std::string inFile)
 {
 	this->inFile = inFile;
-
 	std::ifstream input(inFile);
 
 	if (!reader.parse(input, object)) {
@@ -46,8 +45,23 @@ Converter::parse_json(std::string inFile)
 int8_t
 Converter::write_bat()
 {
-	bool first = true;
-	std::ofstream output(outFile.asString());
+	std::streambuf *sbuf;
+	std::ofstream tmp;
+
+	/*
+	 * By default std::cout can't be assigned to std::ofstream.
+	 * This limitation would make it impossible to use a single
+	 * object for files and stdout. To avoid this, take the
+	 * underlying buffer out of the file and move it to
+	 * a new object with a datatype that can represent both.
+	 */
+	if (toFile) {
+		tmp.open(outFile.asString());
+		sbuf = tmp.rdbuf();
+	} else {
+		sbuf = std::cout.rdbuf();
+	}
+	std::ostream output(sbuf);
 
 	/* Basic setup */
 	output << "@ECHO OFF " << "C:\\Windows\\System32\\cmd.exe ";
@@ -57,6 +71,7 @@ Converter::write_bat()
 		output << "/k \"";
 	}
 
+	bool first = true;
 	/* Take care of EXE instructions */
 	for (auto command : commands) {
 		if (!first)
@@ -83,13 +98,13 @@ Converter::write_bat()
 }
 
 void
-Converter::set_verbose(bool v)
+Converter::to_file(bool b)
 {
-	verbose = v;
+	toFile = b;
 }
 
 void
-Converter::fverbose()
+Converter::outfmt()
 {
 	std::cout << "Content of the file \"" << inFile << "\": " << std::endl;
 	std::cout << "Target name: " << outFile.asString() << std::endl;
