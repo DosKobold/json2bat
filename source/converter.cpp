@@ -97,7 +97,11 @@ Converter::write_bat()
 	for (auto path : paths) {
 		output << path << ';';
 	}
-	output << "\%path\%\"" << " @ECHO ON";
+	
+	output << "\%path\%";
+	/* Take care of application */
+	output << " && start " << application; //ADD outputfile without .json
+	output << "\" @ECHO ON";
 
 	return 0;
 }

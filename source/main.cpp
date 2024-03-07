@@ -21,10 +21,10 @@ help()
 	    "\t\t\tOnly a single value can be overwritten at a time.\n"
 	    "\t\t\tExample: -o hideshell=true\n"
 	    "Authors:\n"
-	    "\tTom Schwindl\t<a@a.com>\n"
+	    "\tTom Schwindl\t<schwindl@posteo.de>\n"
 	    "\tPaul Stoeckle\t<paul.stoeckle@t-online.de>\n"
-	    "\tElias Schnick\t<a@a.com>\n"
-	    "\tBen Oeckl\t<a@a.com>\n"
+	    "\tElias Schnick\t<eliasschnick@t-online.de>\n"
+	    "\tBen Oeckl\t<ben@oeckl.com>\n"
 	<< std::endl;
 }
 
