@@ -26,9 +26,9 @@ Converter::parse_json(std::string inFile)
 
 	/* Make sure overwrite() works. */
 	if (!outFile)
-		outFile   = object["outputfile"];
+		outFile   = object["outputfile"]; //WARNING: It could be null (warning needed
 	if (!hideshell)
-		hideshell = object["hideshell"];
+		hideshell = object["hideshell"]; //WARNING: It could contain not allowed values (error needed)
 	if (!application)
 		application = object["application"];
 	entries   = object["entries"];
@@ -99,11 +99,11 @@ Converter::write_bat()
 	}
 	output << "\%path\%";
 
-	/* Take care of application */
+	/* Take care of application */ //WARNING: It it is allowed to be NULL (ReqFunc25)
 	size_t dot = outFile.asString().find_last_of(".");
 	output << " && start \"" << outFile.asString().substr(0, dot) << "\" " \
 	    << application.asString();
-	output << "\" @ECHO ON\n";
+	output << "\" @ECHO ON\n"; //WARNING: It should be \r (ReqFunc24)
 
 	return 0;
 }
