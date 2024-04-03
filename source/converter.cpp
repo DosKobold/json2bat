@@ -26,9 +26,19 @@ Converter::parse_json(std::string inFile)
 
 	/* Make sure overwrite() works. */
 	if (!outFile)
-		outFile   = object["outputfile"]; //WARNING: It could be null (warning needed
+		if (object["outputfile"] && object["outputfile"] != "")
+			outFile   = object["outputfile"]; //WARNING: It could be null (warning needed
+		else {
+			std::cerr << "ERROR: Object \"outputfile\" does not exist or is empty!" << std::endl;
+			return 1;
+		}
 	if (!hideshell)
-		hideshell = object["hideshell"]; //WARNING: It could contain not allowed values (error needed)
+		if (object["hideshell"] && (object["hideshell"] == false || object["hideshell"] == true))
+			hideshell = object["hideshell"]; //WARNING: It could contain not allowed values (error needed)
+		else {
+			std::cerr << "ERROR: Object \"hideshell\" does not exist or is no boolean!" << std::endl;
+			return 1;
+		}
 	if (!application)
 		application = object["application"];
 	entries   = object["entries"];
