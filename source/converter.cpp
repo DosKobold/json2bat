@@ -20,21 +20,22 @@ Converter::parse_json(std::string inFile)
 	std::ifstream input(inFile);
 
 	if (!reader.parse(input, object)) {
-		std::cerr << "ERROR: Could not parse file into object!" << std::endl;
+		std::cerr << "ERROR: Could not parse file into object! Following message is provided by the parser: " << std::endl;
+		std::cerr << reader.getFormattedErrorMessages();
 		return 1;
 	}
 
 	/* Make sure overwrite() works. */
 	if (!outFile)
 		if (object["outputfile"] && object["outputfile"] != "")
-			outFile   = object["outputfile"]; //WARNING: It could be null (warning needed
+			outFile   = object["outputfile"];
 		else {
 			std::cerr << "ERROR: Object \"outputfile\" does not exist or is empty!" << std::endl;
 			return 1;
 		}
 	if (!hideshell)
 		if (object["hideshell"] && (object["hideshell"] == false || object["hideshell"] == true))
-			hideshell = object["hideshell"]; //WARNING: It could contain not allowed values (error needed)
+			hideshell = object["hideshell"];
 		else {
 			std::cerr << "ERROR: Object \"hideshell\" does not exist or is no boolean!" << std::endl;
 			return 1;
