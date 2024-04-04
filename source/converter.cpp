@@ -121,7 +121,7 @@ Converter::write_bat()
 	size_t dot = outFile.asString().find_last_of(".");
 	output << " && start \"" << outFile.asString().substr(0, dot) << "\" " \
 	    << application.asString();
-	output << "\" @ECHO ON\n"; //WARNING: It should be \r (ReqFunc24)
+	output << "\" @ECHO ON\r\n";
 
 	return 0;
 }
