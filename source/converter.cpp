@@ -124,7 +124,7 @@ Converter::write_bat()
 		output << " && start \"" << outFile.asString().substr(0, dot) << "\" " \
 		    << application.asString();
 	}
-	output << "\" @ECHO ON\r\n";
+	output << "\"\r\n@ECHO ON\r\n";
 
 	return 0;
 }
