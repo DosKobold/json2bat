@@ -11,7 +11,7 @@ class Converter {
 		int8_t write_bat();
 		void outfmt();
 		void to_file(bool);
-		bool overwrite(char *);
+		bool is_overwritable(char *);
 	private:
 		bool toFile;
 

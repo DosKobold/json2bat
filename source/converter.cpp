@@ -25,23 +25,28 @@ Converter::parse_json(std::string inFile)
 		return 1;
 	}
 
-	/* Make sure overwrite() works. */
-	if (!outFile)
-		if (object["outputfile"] && object["outputfile"] != "")
-			outFile   = object["outputfile"];
-		else {
+	/* Make sure overwriting works. */
+	if (!outFile) {
+		if (object["outputfile"] && object["outputfile"] != "") {
+			outFile = object["outputfile"];
+		} else {
 			std::cerr << "ERROR: Object \"outputfile\" does not exist or is empty!" << std::endl;
 			return 1;
 		}
-	if (!hideshell)
-		if (object["hideshell"] && (object["hideshell"] == false || object["hideshell"] == true))
+	}
+
+	if (!hideshell) {
+		if (object["hideshell"] && (object["hideshell"] == false || object["hideshell"] == true)) {
 			hideshell = object["hideshell"];
-		else {
+		} else {
 			std::cerr << "ERROR: Object \"hideshell\" does not exist or is no boolean!" << std::endl;
 			return 1;
 		}
-	if (!application)
+	}
+
+	if (!application) {
 		application = object["application"];
+	}
 	entries   = object["entries"];
 
 	for (auto entry : entries) {
@@ -80,7 +85,9 @@ Converter::write_bat()
 	std::ostream output(sbuf);
 
 	/* Basic setup */
-	output << "@ECHO OFF " << "C:\\Windows\\System32\\cmd.exe ";
+	output << "@ECHO " << (hideshell == true ? "OFF" : "ON") << \
+	    " C:\\Windows\\System32\\cmd.exe ";
+
 	if (hideshell.asString() == "true") {
 		output << "/c \"";
 	} else {
@@ -146,7 +153,7 @@ Converter::outfmt()
 }
 
 bool
-Converter::overwrite(char *arg)
+Converter::is_overwritable(char *arg)
 {
 	char *eq;
 
@@ -158,12 +165,13 @@ Converter::overwrite(char *arg)
 		return false;
 	*eq++ = '\0';
 
-	if (!std::strcmp(arg, "hideshell"))
-		this->hideshell = (!std::strcmp(eq, "true")) ? "true" : "false";
-	else if (!std::strcmp(arg, "outputfile"))
+	if (arg == "hidshell") {
+		this->hideshell = (eq == "true") ? "true" : "false";
+	} else if (arg == "outputfile") {
 		this->outFile = eq;
-	else if (!std::strcmp(arg, "application"))
+	} else if (arg == "application") {
 		this->application = eq;
+	}
 
 	return true;
 }

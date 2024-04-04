@@ -53,7 +53,7 @@ main(int argc, char *argv[])
 				fflag = true;
 				break;
 			case 'o':
-				if (!converter.overwrite(optarg)) {
+				if (!converter.is_overwritable(optarg)) {
 					std::cerr << "ERROR: Invalid value for overwrite" << std::endl;
 					return 1;
 				}
