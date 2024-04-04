@@ -10,10 +10,11 @@
 
 Converter::Converter()
 {
-	toFile = true;
+	toFile  = true;
+	forceOW = false;
 }
 
-int8_t
+bool
 Converter::parse_json(std::string inFile)
 {
 	this->inFile = inFile;
@@ -22,7 +23,7 @@ Converter::parse_json(std::string inFile)
 	if (!reader.parse(input, object)) {
 		std::cerr << "ERROR: Could not parse file into object! Following message is provided by the parser: " << std::endl;
 		std::cerr << reader.getFormattedErrorMessages();
-		return 1;
+		return false;
 	}
 
 	/* Make sure overwriting works. */
@@ -31,7 +32,7 @@ Converter::parse_json(std::string inFile)
 			outFile = object["outputfile"];
 		} else {
 			std::cerr << "ERROR: Object \"outputfile\" does not exist or is empty!" << std::endl;
-			return 1;
+			return false;
 		}
 	}
 
@@ -40,14 +41,14 @@ Converter::parse_json(std::string inFile)
 			hideshell = object["hideshell"];
 		} else {
 			std::cerr << "ERROR: Object \"hideshell\" does not exist or is no boolean!" << std::endl;
-			return 1;
+			return false;
 		}
 	}
 
 	if (!application) {
 		application = object["application"];
 	}
-	entries   = object["entries"];
+	entries = object["entries"];
 
 	for (auto entry : entries) {
 		if (entry["type"].asString() == "EXE") {
@@ -60,14 +61,26 @@ Converter::parse_json(std::string inFile)
 		}
 	}
 
-	return 0;
+	return true;
 }
 
-int8_t
+bool
 Converter::write_bat()
 {
 	std::streambuf *sbuf;
 	std::ofstream tmp;
+
+	/* In case the filename already exists, ask if overwriting is okay. */
+	if (std::filesystem::exists(outFile.asString()) && !this->forceOW) {
+		char yn;
+		do {
+			std::cerr << "Overwrite existing file [" << outFile.asString() \
+			    << "]? (y/n): ";
+			std::cin >> yn;
+		} while (yn != 'y' && yn != 'n');
+		if (yn == 'n')
+			return true;
+	}
 
 	/*
 	 * By default std::cout can't be assigned to std::ofstream.
@@ -126,13 +139,19 @@ Converter::write_bat()
 	}
 	output << "\"\r\n@ECHO ON\r\n";
 
-	return 0;
+	return true;
 }
 
 void
-Converter::to_file(bool b)
+Converter::set_toFile(bool b)
 {
-	toFile = b;
+	this->toFile = b;
+}
+
+void
+Converter::set_forceOW(bool b)
+{
+	this->forceOW = b;
 }
 
 void

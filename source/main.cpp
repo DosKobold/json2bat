@@ -1,9 +1,9 @@
-#include <iostream>
-#include <string>
-#include <list>
-#include <getopt.h>
-#include <fstream>
 #include <filesystem>
+#include <fstream>
+#include <getopt.h>
+#include <iostream>
+#include <list>
+#include <string>
 #include <jsoncpp/json/json.h>
 
 #include "converter.h"
@@ -15,7 +15,8 @@ help()
 	    "Options:\n"
 	    "\t-h, --help\tprint this message and exit\n"
 	    "\t-c, --console\tprint the ouput only to the console\n"
-	    "\t-f, --format\tprint the input information to the console\n"
+	    "\t-f, --force\tforce overwriting an existing file\n"
+	    "\t-s, --stdout\tprint the input information formated to the console\n"
 	    "\t-o, --overwrite\tchange the value of either 'hideshell',\n"
 	    "\t\t\t'outputfile' or 'application' in the generated file.\n"
 	    "\t\t\tOnly a single value can be overwritten at a time.\n"
@@ -31,7 +32,7 @@ help()
 int
 main(int argc, char *argv[])
 {
-	bool fflag = false;
+	bool sflag = false;
 	int opt;
 	int option_index = 0;
 	Converter converter;
@@ -39,18 +40,22 @@ main(int argc, char *argv[])
 	struct option long_options[] = {
 		{"help",      no_argument,       0, 'h'},
 		{"console",   no_argument,       0, 'c'},
-		{"format",    no_argument,       0, 'f'},
+		{"force",     no_argument,       0, 'f'},
+		{"stdout",    no_argument,       0, 's'},
 		{"overwrite", required_argument, 0, 'o'},
 		{0,         0,                   0,  0 },
 	};
 
-	while ((opt = getopt_long(argc, argv, "hcfo:", long_options, &option_index)) != -1) {
+	while ((opt = getopt_long(argc, argv, "hcfso:", long_options, &option_index)) != -1) {
 		switch (opt) {
 			case 'c':
-				converter.to_file(false);
+				converter.set_toFile(false);
 				break;
 			case 'f':
-				fflag = true;
+				converter.set_forceOW(true);
+				break;
+			case 's':
+				sflag = true;
 				break;
 			case 'o':
 				if (!converter.is_overwritable(optarg)) {
@@ -75,7 +80,7 @@ main(int argc, char *argv[])
 
 	for (; *argv; ++argv) {
 		if (std::filesystem::exists(*argv)) {
-			if (converter.parse_json(*argv) || converter.write_bat()) {
+			if (!converter.parse_json(*argv) || !converter.write_bat()) {
 				std::cerr << "ERROR: Could not convert json to batch!" << std::endl;
 				continue;
 			}
@@ -83,7 +88,7 @@ main(int argc, char *argv[])
 			std::cerr << "ERROR: The given file does not exist!" << std::endl;
 			continue;
 		}
-		if (fflag) {
+		if (sflag) {
 			converter.outfmt();
 		}
 	}

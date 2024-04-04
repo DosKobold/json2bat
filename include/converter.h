@@ -7,13 +7,15 @@ class Converter {
 	public:
 		Converter();
 
-		int8_t parse_json(std::string);
-		int8_t write_bat();
+		bool parse_json(std::string);
+		bool write_bat();
 		void outfmt();
-		void to_file(bool);
+		void set_toFile(bool);
+		void set_forceOW(bool);
 		bool is_overwritable(char *);
 	private:
 		bool toFile;
+		bool forceOW;
 
 		std::string inFile;
 
