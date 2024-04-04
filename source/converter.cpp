@@ -117,10 +117,13 @@ Converter::write_bat()
 	}
 	output << "\%path\%";
 
-	/* Take care of application */ //WARNING: It it is allowed to be NULL (ReqFunc25)
-	size_t dot = outFile.asString().find_last_of(".");
-	output << " && start \"" << outFile.asString().substr(0, dot) << "\" " \
-	    << application.asString();
+	/* Take care of application */
+	if (application) {
+		/* Extract title from outputfile */
+		size_t dot = outFile.asString().find_last_of(".");
+		output << " && start \"" << outFile.asString().substr(0, dot) << "\" " \
+		    << application.asString();
+	}
 	output << "\" @ECHO ON\r\n";
 
 	return 0;
