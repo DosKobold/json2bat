@@ -81,11 +81,11 @@ main(int argc, char *argv[])
 	for (; *argv; ++argv) {
 		if (std::filesystem::exists(*argv)) {
 			if (!converter.parse_json(*argv) || !converter.write_bat()) {
-				std::cerr << "ERROR: Could not convert json to batch!" << std::endl;
+				std::cerr << "ERROR: [" << *argv << "] Could not convert json to batch!" << std::endl;
 				continue;
 			}
 		} else {
-			std::cerr << "ERROR: The given file does not exist!" << std::endl;
+			std::cerr << "ERROR: [" << *argv << "] The given file does not exist!" << std::endl;
 			continue;
 		}
 		if (sflag) {
