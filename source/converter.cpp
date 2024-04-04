@@ -98,8 +98,7 @@ Converter::write_bat()
 	std::ostream output(sbuf);
 
 	/* Basic setup */
-	output << "@ECHO " << (hideshell == true ? "OFF" : "ON") << \
-	    " C:\\Windows\\System32\\cmd.exe ";
+	output << "@ECHO OFF " << "C:\\Windows\\System32\\cmd.exe ";
 
 	if (hideshell.asString() == "true") {
 		output << "/c \"";
