@@ -1,5 +1,5 @@
-#ifndef JSONFILE_HXX_
-#define JSONFILE_HXX_
+#ifndef CONVERTER_H_
+#define CONVERTER_H_
 
 #include <string>
 
@@ -33,4 +33,4 @@ class Converter {
 		std::list<std::string> paths;
 };
 
-#endif /* JSONFILE_HXX_ */
+#endif /* CONVERTER_H_ */
