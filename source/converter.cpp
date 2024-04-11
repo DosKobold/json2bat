@@ -1,63 +1,67 @@
 #include <filesystem>
 #include <fstream>
-#include <getopt.h>
 #include <iostream>
 #include <list>
 #include <string>
 #include <jsoncpp/json/json.h>
 
-#include "converter.h"
+#include "converter.hpp"
 
 Converter::Converter()
 {
-	toFile  = true;
-	forceOW = false;
+	file        = new File{};
+	forceOW     = false;
+	writeToFile = true;
 }
 
 bool
 Converter::parse_json(std::string inFile)
 {
-	this->inFile = inFile;
+	file->inFile = inFile;
 	std::ifstream input(inFile);
 
-	if (!reader.parse(input, object)) {
-		std::cerr << "ERROR: [" << inFile  << "] Could not parse file into object! Following message is provided by the parser: " << std::endl;
+	if (!reader.parse(input, file->object)) {
+		std::cerr << "ERROR: [" << file->inFile  << \
+		    "] Could not parse file into object! Following message is " \
+		    "provided by the parser: " << std::endl;
 		std::cerr << reader.getFormattedErrorMessages();
 		return false;
 	}
 
 	/* Make sure overwriting works. */
-	if (!outFile) {
-		if (object["outputfile"] && object["outputfile"] != "") {
-			outFile = object["outputfile"];
+	if (!file->outFile) {
+		if (file->object["outputfile"] && file->object["outputfile"] != "") {
+			file->outFile = file->object["outputfile"];
 		} else {
-			std::cerr << "ERROR: [" << inFile << "] Object \"outputfile\" does not exist or is empty!" << std::endl;
+			std::cerr << "ERROR: [" << file->inFile << "] Object \"outputfile\"" \
+			    " does not exist or is empty!" << std::endl;
 			return false;
 		}
 	}
 
-	if (!hideshell) {
-		if (object["hideshell"] && (object["hideshell"] == false || object["hideshell"] == true)) {
-			hideshell = object["hideshell"];
+	if (!file->hideshell) {
+		if (file->object["hideshell"] && (file->object["hideshell"] == false || \
+		    file->object["hideshell"] == true)) {
+			file->hideshell = file->object["hideshell"];
 		} else {
-			std::cerr << "ERROR: [" << inFile << "] Object \"hideshell\" does not exist or is no boolean!" << std::endl;
+			std::cerr << "ERROR: [" << file->inFile << "] Object \"hideshell\" \
+			    does not exist or is no boolean!" << std::endl;
 			return false;
 		}
 	}
 
-	if (!application) {
-		application = object["application"];
+	if (!file->application) {
+		file->application = file->object["application"];
 	}
-	entries = object["entries"];
+	file->entries = file->object["entries"];
 
-	for (auto entry : entries) {
+	for (auto entry : file->entries) {
 		if (entry["type"].asString() == "EXE") {
-			commands.push_back(entry["command"].asString());
+			file->add_command(entry["command"].asString());
 		} else if (entry["type"].asString() == "ENV") {
-			keys.push_back(entry["key"].asString());
-			values.push_back(entry["value"].asString());
+			file->add_pair(entry["key"].asString(), entry["value"].asString());
 		} else if (entry["type"].asString() == "PATH") {
-			paths.push_back(entry["path"].asString());
+			file->add_path(entry["path"].asString());
 		}
 	}
 
@@ -71,10 +75,10 @@ Converter::write_bat()
 	std::ofstream tmp;
 
 	/* In case the filename already exists, ask if overwriting is okay. */
-	if (std::filesystem::exists(outFile.asString()) && !this->forceOW) {
+	if (std::filesystem::exists(file->outFile.asString()) && !forceOW) {
 		char yn;
 		do {
-			std::cerr << "Overwrite existing file [" << outFile.asString() \
+			std::cerr << "Overwrite existing file [" << file->outFile.asString() \
 			    << "]? (y/n): ";
 			std::cin >> yn;
 		} while (yn != 'y' && yn != 'n');
@@ -89,8 +93,8 @@ Converter::write_bat()
 	 * underlying buffer out of the file and move it to
 	 * a new object with a datatype that can represent both.
 	 */
-	if (toFile) {
-		tmp.open(outFile.asString());
+	if (writeToFile) {
+		tmp.open(file->outFile.asString());
 		sbuf = tmp.rdbuf();
 	} else {
 		sbuf = std::cout.rdbuf();
@@ -98,9 +102,9 @@ Converter::write_bat()
 	std::ostream output(sbuf);
 
 	/* Basic setup */
-	output << "@ECHO OFF " << "C:\\Windows\\System32\\cmd.exe ";
+	output << "@ECHO OFF\r\n" << "C:\\Windows\\System32\\cmd.exe ";
 
-	if (hideshell.asString() == "true") {
+	if (file->hideshell.asString() == "true") {
 		output << "/c \"";
 	} else {
 		output << "/k \"";
@@ -108,7 +112,7 @@ Converter::write_bat()
 
 	bool first = true;
 	/* Take care of EXE instructions */
-	for (auto command : commands) {
+	for (auto command : file->get_commands()) {
 		if (!first)
 			output << " && ";
 		output << command;
@@ -116,59 +120,66 @@ Converter::write_bat()
 	}
 
 	/* Take care of ENV instructions */
-	std::list<std::string>::iterator key = keys.begin();
-	std::list<std::string>::iterator value = values.begin();
-	for (; key!=keys.end() && value!=values.end(); ++key, ++value) {
+	std::list<std::string>::iterator key = file->get_keys()->begin();
+	std::list<std::string>::iterator value = file->get_values()->begin();
+	auto keyEnd = file->get_keys()->end();
+	auto valEnd = file->get_values()->end();
+
+	for (; key!=keyEnd && value!=valEnd; ++key, ++value) {
 		output << " && set " << *key << '=' << *value;
 	}
 
 	/* Take care of PATH instructions */
 	output << " && set path=";
-	for (auto path : paths) {
+	for (auto path : file->get_paths()) {
 		output << path << ';';
 	}
 	output << "\%path\%";
 
 	/* Take care of application */
-	if (application) {
+	if (file->application) {
 		/* Extract title from outputfile */
-		size_t dot = outFile.asString().find_last_of(".");
-		output << " && start \"" << outFile.asString().substr(0, dot) << "\" " \
-		    << application.asString();
+		size_t dot = file->outFile.asString().find_last_of(".");
+		output << " && start \"" << file->outFile.asString().substr(0, dot) \
+		    << "\" " << file->application.asString();
 	}
 	output << "\"\r\n@ECHO ON\r\n";
+
+	/* Empty the old File so no values clutter a potential new one. */
+	delete file;
+	file = new File{};
 
 	return true;
 }
 
 void
-Converter::set_toFile(bool b)
+Converter::out_to_file(bool b)
 {
-	this->toFile = b;
+	writeToFile = b;
 }
 
 void
-Converter::set_forceOW(bool b)
+Converter::force_overwrite(bool b)
 {
-	this->forceOW = b;
+	forceOW = b;
 }
 
 void
-Converter::outfmt()
+Converter::print_fmt()
 {
-	std::cout << "Content of the file \"" << inFile << "\": " << std::endl;
-	std::cout << "Target name: " << outFile.asString() << std::endl;
-	std::cout << "Hideshell:   " << hideshell.asString() << std::endl;
+	std::cout << "Content of the file \"" << file->inFile << "\": " << std::endl;
+	std::cout << "Target name: " << file->outFile.asString() << std::endl;
+	std::cout << "Hideshell:   " << file->hideshell.asString() << std::endl;
 
-	for (auto command : commands) {
+	for (auto command : file->get_commands()) {
 		std::cout << "EXE  | " << command << std::endl;
 	}
-	std::list<std::string>::iterator key = keys.begin();
-	std::list<std::string>::iterator value = values.begin();
-	for (; key!=keys.end() && value!=values.end(); ++key, ++value) {
+	std::list<std::string>::iterator key = file->get_keys()->begin();
+	std::list<std::string>::iterator value = file->get_values()->begin();
+	for (; key!=file->get_keys()->end() && value!=file->get_values()->end(); ++key, ++value) {
 		std::cout << "ENV  | " << *key << ' ' << *value << std::endl;
 	}
-	for (auto path : paths) {
+	for (auto path : file->get_paths()) {
 		std::cout << "PATH | " << path << std::endl;
 	}
 }
@@ -186,12 +197,12 @@ Converter::is_overwritable(char *arg)
 		return false;
 	*eq++ = '\0';
 
-	if (arg == "hidshell") {
-		this->hideshell = (eq == "true") ? "true" : "false";
+	if (arg == "hideshell") {
+		file->hideshell = (eq == "true") ? "true" : "false";
 	} else if (arg == "outputfile") {
-		this->outFile = eq;
+		file->outFile = eq;
 	} else if (arg == "application") {
-		this->application = eq;
+		file->application = eq;
 	}
 
 	return true;

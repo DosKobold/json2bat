@@ -6,7 +6,7 @@
 #include <string>
 #include <jsoncpp/json/json.h>
 
-#include "converter.h"
+#include "converter.hpp"
 
 static void
 help()
@@ -49,10 +49,10 @@ main(int argc, char *argv[])
 	while ((opt = getopt_long(argc, argv, "hcfso:", long_options, &option_index)) != -1) {
 		switch (opt) {
 			case 'c':
-				converter.set_toFile(false);
+				converter.out_to_file(false);
 				break;
 			case 'f':
-				converter.set_forceOW(true);
+				converter.force_overwrite(true);
 				break;
 			case 's':
 				sflag = true;
@@ -89,7 +89,7 @@ main(int argc, char *argv[])
 			continue;
 		}
 		if (sflag) {
-			converter.outfmt();
+			converter.print_fmt();
 		}
 	}
 
