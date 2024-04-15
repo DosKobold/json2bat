@@ -44,8 +44,8 @@ Converter::parse_json(std::string inFile)
 		    file->object["hideshell"] == true)) {
 			file->hideshell = file->object["hideshell"];
 		} else {
-			std::cerr << "ERROR: [" << file->inFile << "] Object \"hideshell\" \
-			    does not exist or is no boolean!" << std::endl;
+			std::cerr << "ERROR: [" << file->inFile << "] Object \"hideshell\"" \
+			    " does not exist or is no boolean!" << std::endl;
 			return false;
 		}
 	}
