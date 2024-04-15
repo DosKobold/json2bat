@@ -125,16 +125,25 @@ Converter::write_bat()
 	auto keyEnd = file->get_keys()->end();
 	auto valEnd = file->get_values()->end();
 
+	first = true;
 	for (; key!=keyEnd && value!=valEnd; ++key, ++value) {
-		output << " && set " << *key << '=' << *value;
+		if (first && (file->get_commands()).empty()) {
+			output << "set ";
+		} else {
+			output << " && set ";
+		}
+		output  << *key << '=' << *value;
+		first = false;
 	}
 
 	/* Take care of PATH instructions */
-	output << " && set path=";
+	if (!(file->get_paths()).empty())
+		output << " && set path=";
 	for (auto path : file->get_paths()) {
 		output << path << ';';
 	}
-	output << "\%path\%";
+	if (!(file->get_paths()).empty())
+		output << "\%path\%";
 
 	/* Take care of application */
 	if (file->application) {
