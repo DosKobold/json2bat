@@ -82,6 +82,7 @@ main(int argc, char *argv[])
 		if (std::filesystem::exists(*argv)) {
 			if (!converter.parse_json(*argv) || !converter.write_bat()) {
 				std::cerr << "ERROR: [" << *argv << "] Could not convert json to batch!" << std::endl;
+				converter.clear_file();
 				continue;
 			}
 		} else {

@@ -10,6 +10,7 @@ class Converter {
 		Converter();
 
 	public:
+		void clear_file();
 		bool parse_json(std::string);
 		bool write_bat();
 		void print_fmt();

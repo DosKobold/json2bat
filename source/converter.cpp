@@ -14,6 +14,13 @@ Converter::Converter()
 	writeToFile = true;
 }
 
+void
+Converter::clear_file()
+{
+	delete file;
+	file = new File{};
+}
+
 bool
 Converter::parse_json(std::string inFile)
 {
@@ -155,8 +162,7 @@ Converter::write_bat()
 	output << "\"\r\n@ECHO ON\r\n";
 
 	/* Empty the old File so no values clutter a potential new one. */
-	delete file;
-	file = new File{};
+	clear_file();
 
 	return true;
 }
