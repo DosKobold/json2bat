@@ -161,9 +161,6 @@ Converter::write_bat()
 	}
 	output << "\"\r\n@ECHO ON\r\n";
 
-	/* Empty the old File so no values clutter a potential new one. */
-	clear_file();
-
 	return true;
 }
 

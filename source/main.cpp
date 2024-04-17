@@ -85,12 +85,13 @@ main(int argc, char *argv[])
 				converter.clear_file();
 				continue;
 			}
+			if (sflag) {
+				converter.print_fmt();
+			}
+			converter.clear_file();
 		} else {
 			std::cerr << "ERROR: [" << *argv << "] The given file does not exist!" << std::endl;
 			continue;
-		}
-		if (sflag) {
-			converter.print_fmt();
 		}
 	}
 
