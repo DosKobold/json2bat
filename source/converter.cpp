@@ -82,7 +82,7 @@ Converter::write_bat()
 	std::ofstream tmp;
 
 	/* In case the filename already exists, ask if overwriting is okay. */
-	if (std::filesystem::exists(file->outFile.asString()) && !forceOW) {
+	if (std::filesystem::exists(file->outFile.asString()) && !forceOW && writeToFile) {
 		char yn;
 		do {
 			std::cerr << "Overwrite existing file [" << file->outFile.asString() \
@@ -197,7 +197,7 @@ Converter::print_fmt()
 }
 
 bool
-Converter::is_overwritable(char *arg)
+Converter::overwrite(char *arg) //DON'T FUCKING CHANGE THE VALUE OF THE POINTER, WE HAVE TO CHANGE A COPY!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 {
 	char *eq;
 
@@ -209,12 +209,14 @@ Converter::is_overwritable(char *arg)
 		return false;
 	*eq++ = '\0';
 
-	if (arg == "hideshell") {
-		file->hideshell = (eq == "true") ? "true" : "false";
-	} else if (arg == "outputfile") {
+	if (!strcmp(arg, "hideshell")) {
+		file->hideshell = (!strcmp(eq, "true")) ? "true" : "false";
+	} else if (!strcmp(arg, "outputfile")) {
 		file->outFile = eq;
-	} else if (arg == "application") {
+	} else if (!strcmp(arg, "application")) {
 		file->application = eq;
+	} else {
+		return false;
 	}
 
 	return true;

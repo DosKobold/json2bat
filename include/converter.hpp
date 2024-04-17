@@ -16,7 +16,7 @@ class Converter {
 		void print_fmt();
 		void out_to_file(bool);
 		void force_overwrite(bool);
-		bool is_overwritable(char *);
+		bool overwrite(char *);
 
 	public:
 		File *file;

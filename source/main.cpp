@@ -33,6 +33,7 @@ int
 main(int argc, char *argv[])
 {
 	bool sflag = false;
+	char *oarg = NULL;
 	int opt;
 	int option_index = 0;
 	Converter converter;
@@ -58,9 +59,11 @@ main(int argc, char *argv[])
 				sflag = true;
 				break;
 			case 'o':
-				if (!converter.is_overwritable(optarg)) {
-					std::cerr << "ERROR: Invalid value for overwrite" << std::endl;
+				if (!converter.overwrite(optarg)) {
+					std::cerr << "ERROR: Invalid value for overwrite!" << std::endl;
 					return 1;
+				} else {
+					oarg = optarg;
 				}
 				break;
 			case 'h':
@@ -80,8 +83,15 @@ main(int argc, char *argv[])
 
 	for (; *argv; ++argv) {
 		if (std::filesystem::exists(*argv)) {
-			if (!converter.parse_json(*argv) || !converter.write_bat()) {
-				std::cerr << "ERROR: [" << *argv << "] Could not convert json to batch!" << std::endl;
+			if (!converter.parse_json(*argv)) {
+				converter.clear_file();
+				continue;
+			}
+			if (oarg) {
+				//THIS IS BAD AS FUCK. FOR EVERY FILE THE SAME ALGORITHM???????!!!!!!!
+				converter.overwrite(oarg);
+			}
+			if (!converter.write_bat()) {
 				converter.clear_file();
 				continue;
 			}
