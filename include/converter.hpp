@@ -8,21 +8,19 @@
 class Converter {
 	public:
 		Converter();
+		~Converter();
 
-	public:
-		void clear_file();
 		bool parse_json(std::string);
 		bool write_bat();
 		void print_fmt();
+		void clear_file();
 		void out_to_file(bool);
 		void force_overwrite(bool);
 		bool overwrite(char *);
 
-	public:
+	private:
 		File *file;
 		Json::Reader reader;
-
-	private:
 		bool writeToFile;
 		bool forceOW;
 };

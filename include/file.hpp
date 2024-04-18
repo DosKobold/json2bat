@@ -2,29 +2,42 @@
 #define FILE_HPP_
 
 #include <list>
+#include <string>
+#include <jsoncpp/json/json.h>
 
 class File {
 	public:
-		void add_command(std::string);
-		void add_pair(std::string, std::string);
-		void add_path(std::string);
-		std::list<std::string> get_commands();
-		std::list<std::string> get_paths();
-		std::list<std::string> *get_keys();
-		std::list<std::string> *get_values();
+		bool fill(Json::Value&, std::string, std::ostream&);
 
-	public:
-		std::string inFile;
-		Json::Value object;
-		Json::Value outFile;
-		Json::Value hideshell;
-		Json::Value application;
-		Json::Value entries;
+		/* Formatted output. */
+		void iterate_env(std::ostream&) const;
+		void iterate_env(std::ostream&, const std::string&, const std::string&) const;
+		void iterate_commands(std::ostream&) const;
+		void iterate_commands(std::ostream&, const std::string&) const;
+		void iterate_paths(std::ostream&) const;
+		void iterate_paths(std::ostream&, const std::string&) const;
+		std::string title() const;
+
+		/* Manupulate fields after initial File::fill(). */
+		void overwrite_hideshell(bool);
+		void overwrite_application(std::string);
+		void overwrite_outfile(std::string);
+
+		/* Receive information from outside. */
+		bool hideshell() const;
+		const std::string& application() const;
+		const std::string& outfile() const;
+
 	private:
-		std::list<std::string> commands;
-		std::list<std::string> keys;
-		std::list<std::string> values;
-		std::list<std::string> paths;
+		std::list<std::string> m_commands;
+		std::list<std::string> m_keys;
+		std::list<std::string> m_values;
+		std::list<std::string> m_paths;
+		Json::Value m_entries;
+		std::string m_inFile;
+		std::string m_outFile;
+		std::string m_application;
+		bool m_hideshell;
 };
 
 #endif /* FILE_HPP_ */

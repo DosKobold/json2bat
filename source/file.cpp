@@ -1,48 +1,165 @@
-#include <string>
 #include <iostream>
+#include <list>
+#include <string>
 #include <jsoncpp/json/json.h>
 
 #include "file.hpp"
 
-void
-File::add_command(std::string cmd)
+bool
+File::fill(Json::Value& objects, std::string in, std::ostream& errout)
 {
-	this->commands.push_back(cmd);
+	m_inFile = in;
+
+	if (objects["outputfile"] && objects["outputfile"] != "") {
+		m_outFile = objects["outputfile"].asString();
+	} else {
+		errout << "ERROR: [" << m_inFile << "] Object \"outputfile\"" \
+		    " does not exist or is empty!" << std::endl;
+		return false;
+	}
+
+	if (objects["hideshell"] && objects["hideshell"].isBool()) {
+		m_hideshell = objects["hideshell"].asBool();
+	} else {
+		errout << "ERROR: [" << m_inFile << "] Object \"hideshell\"" \
+		    " does not exist or is no boolean!" << std::endl;
+		return false;
+	}
+
+
+	/* application isn't mandatory and can either be NULL or omitted. */
+	m_application = objects["application"].asString();
+
+	/* Same for 'entries'. */
+	m_entries = objects["entries"];
+	for (auto entry : m_entries) {
+		if (entry["type"].asString() == "EXE") {
+			m_commands.push_back(entry["command"].asString());
+		} else if (entry["type"].asString() == "ENV") {
+			m_keys.push_back(entry["key"].asString());
+			m_values.push_back( entry["value"].asString());
+		} else if (entry["type"].asString() == "PATH") {
+			m_paths.push_back(entry["path"].asString());
+		}
+	}
+	return true;
 }
 
 void
-File::add_pair(std::string key, std::string value)
+File::iterate_env(std::ostream& out) const
 {
-	this->keys.push_back(key);
-	this->values.push_back(value);
+	bool first  = true;
+	auto key    = this->m_keys.begin();
+	auto keyEnd = this->m_keys.end();
+	auto val    = this->m_values.begin();
+	auto valEnd = this->m_values.end();
+
+	for (; key!=keyEnd && val!=valEnd; ++key, ++val) {
+		if (first && m_commands.empty()) {
+			out << "set ";
+		} else {
+			out << " && set ";
+		}
+		out << *key << "=" << *val;
+		first = false;
+	}
 }
 
 void
-File::add_path(std::string path)
+File::iterate_env(std::ostream& out, const std::string& k, const std::string& v) const
 {
-	this->paths.push_back(path);
+	auto key    = this->m_keys.begin();
+	auto keyEnd = this->m_keys.end();
+	auto val    = this->m_values.begin();
+	auto valEnd = this->m_values.end();
+
+	for (; key!=keyEnd && val!=valEnd; ++key, ++val) {
+		out << k << *key << v << *val << std::endl;
+	}
 }
 
-std::list<std::string>
-File::get_commands()
+void
+File::iterate_commands(std::ostream& out) const
 {
-	return this->commands;
+	bool first = true;
+
+	for (auto cmd : this->m_commands) {
+		if (!first) {
+			out << " && ";
+		}
+		out << cmd;
+		first = false;
+	}
 }
 
-std::list<std::string> *
-File::get_keys()
+void
+File::iterate_commands(std::ostream& out, const std::string& sep) const
 {
-	return &this->keys;
+	for (auto cmd : this->m_commands) {
+		out << sep << cmd << std::endl;
+	}
 }
 
-std::list<std::string> *
-File::get_values()
+void
+File::iterate_paths(std::ostream& out) const
 {
-	return &this->values;
+	if (this->m_paths.empty()) {
+		return;
+	}
+
+	out << " && set path=";
+	for (auto path : this->m_paths) {
+		out << path << ";";
+	}
+	out << "\%path\%";
 }
 
-std::list<std::string>
-File::get_paths()
+void
+File::iterate_paths(std::ostream& out, const std::string& sep) const
 {
-	return this->paths;
+	for (auto path : this->m_paths) {
+		out << sep << path << std::endl;
+	}
+}
+
+std::string
+File::title() const
+{
+	return this->m_outFile.substr(0, this->m_outFile.find_last_of("."));
+}
+
+void
+File::overwrite_hideshell(bool hideshell)
+{
+	this->m_hideshell = hideshell;
+}
+
+void
+File::overwrite_application(std::string application)
+{
+	this->m_application = application;
+}
+
+void
+File::overwrite_outfile(std::string outFile)
+{
+	this->m_outFile = outFile;
+}
+
+bool
+File::hideshell() const
+{
+	return this->m_hideshell;
+}
+
+const std::string&
+File::application() const
+{
+	return this->m_application;
+}
+
+const std::string&
+File::outfile() const
+{
+	return this->m_outFile;
 }

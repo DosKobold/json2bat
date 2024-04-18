@@ -14,6 +14,11 @@ Converter::Converter()
 	writeToFile = true;
 }
 
+Converter::~Converter()
+{
+	delete file;
+}
+
 void
 Converter::clear_file()
 {
@@ -24,54 +29,20 @@ Converter::clear_file()
 bool
 Converter::parse_json(std::string inFile)
 {
-	file->inFile = inFile;
+	Json::Value object{};
 	std::ifstream input(inFile);
 
-	if (!reader.parse(input, file->object)) {
-		std::cerr << "ERROR: [" << file->inFile  << \
-		    "] Could not parse file into object! Following message is " \
+	if (!reader.parse(input, object)) {
+		std::cerr << "ERROR: [" << inFile  << \
+		    "] Could not parse file into objects! Following message is " \
 		    "provided by the parser: " << std::endl;
 		std::cerr << reader.getFormattedErrorMessages();
 		return false;
 	}
 
-	/* Make sure overwriting works. */
-	if (!file->outFile) {
-		if (file->object["outputfile"] && file->object["outputfile"] != "") {
-			file->outFile = file->object["outputfile"];
-		} else {
-			std::cerr << "ERROR: [" << file->inFile << "] Object \"outputfile\"" \
-			    " does not exist or is empty!" << std::endl;
-			return false;
-		}
+	if (!file->fill(object, inFile, std::cerr)) {
+		return false;
 	}
-
-	if (!file->hideshell) {
-		if (file->object["hideshell"] && (file->object["hideshell"] == false || \
-		    file->object["hideshell"] == true)) {
-			file->hideshell = file->object["hideshell"];
-		} else {
-			std::cerr << "ERROR: [" << file->inFile << "] Object \"hideshell\"" \
-			    " does not exist or is no boolean!" << std::endl;
-			return false;
-		}
-	}
-
-	if (!file->application) {
-		file->application = file->object["application"];
-	}
-	file->entries = file->object["entries"];
-
-	for (auto entry : file->entries) {
-		if (entry["type"].asString() == "EXE") {
-			file->add_command(entry["command"].asString());
-		} else if (entry["type"].asString() == "ENV") {
-			file->add_pair(entry["key"].asString(), entry["value"].asString());
-		} else if (entry["type"].asString() == "PATH") {
-			file->add_path(entry["path"].asString());
-		}
-	}
-
 	return true;
 }
 
@@ -82,10 +53,10 @@ Converter::write_bat()
 	std::ofstream tmp;
 
 	/* In case the filename already exists, ask if overwriting is okay. */
-	if (std::filesystem::exists(file->outFile.asString()) && !forceOW && writeToFile) {
+	if (std::filesystem::exists(file->outfile()) && !forceOW && writeToFile) {
 		char yn;
 		do {
-			std::cerr << "Overwrite existing file [" << file->outFile.asString() \
+			std::cerr << "Overwrite existing file [" << file->outfile() \
 			    << "]? (y/n): ";
 			std::cin >> yn;
 		} while (yn != 'y' && yn != 'n');
@@ -96,12 +67,12 @@ Converter::write_bat()
 	/*
 	 * By default std::cout can't be assigned to std::ofstream.
 	 * This limitation would make it impossible to use a single
-	 * object for files and stdout. To avoid this, take the
+	 * objects for files and stdout. To avoid this, take the
 	 * underlying buffer out of the file and move it to
-	 * a new object with a datatype that can represent both.
+	 * a new objects with a datatype that can represent both.
 	 */
 	if (writeToFile) {
-		tmp.open(file->outFile.asString());
+		tmp.open(file->outfile());
 		sbuf = tmp.rdbuf();
 	} else {
 		sbuf = std::cout.rdbuf();
@@ -111,53 +82,25 @@ Converter::write_bat()
 	/* Basic setup */
 	output << "@ECHO OFF\r\n" << "C:\\Windows\\System32\\cmd.exe ";
 
-	if (file->hideshell.asString() == "true") {
+	if (file->hideshell() == true) {
 		output << "/c \"";
 	} else {
 		output << "/k \"";
 	}
 
-	bool first = true;
 	/* Take care of EXE instructions */
-	for (auto command : file->get_commands()) {
-		if (!first)
-			output << " && ";
-		output << command;
-		first = false;
-	}
+	file->iterate_commands(output);
 
 	/* Take care of ENV instructions */
-	std::list<std::string>::iterator key = file->get_keys()->begin();
-	std::list<std::string>::iterator value = file->get_values()->begin();
-	auto keyEnd = file->get_keys()->end();
-	auto valEnd = file->get_values()->end();
-
-	first = true;
-	for (; key!=keyEnd && value!=valEnd; ++key, ++value) {
-		if (first && (file->get_commands()).empty()) {
-			output << "set ";
-		} else {
-			output << " && set ";
-		}
-		output  << *key << '=' << *value;
-		first = false;
-	}
+	file->iterate_env(output);
 
 	/* Take care of PATH instructions */
-	if (!(file->get_paths()).empty())
-		output << " && set path=";
-	for (auto path : file->get_paths()) {
-		output << path << ';';
-	}
-	if (!(file->get_paths()).empty())
-		output << "\%path\%";
+	file->iterate_paths(output);
 
 	/* Take care of application */
-	if (file->application) {
-		/* Extract title from outputfile */
-		size_t dot = file->outFile.asString().find_last_of(".");
-		output << " && start \"" << file->outFile.asString().substr(0, dot) \
-		    << "\" " << file->application.asString();
+	if (!file->application().empty()) {
+		output << " && start \"" << file->title() \
+		    << "\" " << file->application();
 	}
 	output << "\"\r\n@ECHO ON\r\n";
 
@@ -179,26 +122,20 @@ Converter::force_overwrite(bool b)
 void
 Converter::print_fmt()
 {
-	std::cout << "Content of the file \"" << file->inFile << "\": " << std::endl;
-	std::cout << "Target name: " << file->outFile.asString() << std::endl;
-	std::cout << "Hideshell:   " << file->hideshell.asString() << std::endl;
+	std::cout << "Target name: " << file->outfile() << std::endl;
+	std::cout << "Hideshell:   " << std::boolalpha << file->hideshell() \
+	     << std::endl;
 
-	for (auto command : file->get_commands()) {
-		std::cout << "EXE  | " << command << std::endl;
-	}
-	std::list<std::string>::iterator key = file->get_keys()->begin();
-	std::list<std::string>::iterator value = file->get_values()->begin();
-	for (; key!=file->get_keys()->end() && value!=file->get_values()->end(); ++key, ++value) {
-		std::cout << "ENV  | " << *key << ' ' << *value << std::endl;
-	}
-	for (auto path : file->get_paths()) {
-		std::cout << "PATH | " << path << std::endl;
-	}
+	file->iterate_commands(std::cout, "EXE   | ");
+	file->iterate_env(std::cout, "ENV   | ", " ");
+	file->iterate_paths(std::cout, "PATH  | ");
 }
 
 bool
-Converter::overwrite(char *arg) //DON'T FUCKING CHANGE THE VALUE OF THE POINTER, WE HAVE TO CHANGE A COPY!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+Converter::overwrite(char *arg)
 {
+	std::string val;
+	char tmp;
 	char *eq;
 
 	if (!*arg && *arg != '=')
@@ -207,17 +144,20 @@ Converter::overwrite(char *arg) //DON'T FUCKING CHANGE THE VALUE OF THE POINTER,
 	eq = strchr(arg, '=');
 	if (!eq || !eq[1])
 		return false;
+	tmp = *eq;
 	*eq++ = '\0';
 
+	val.assign(eq);
 	if (!strcmp(arg, "hideshell")) {
-		file->hideshell = (!strcmp(eq, "true")) ? "true" : "false";
+		file->overwrite_hideshell((val == "true") ? true : false);
 	} else if (!strcmp(arg, "outputfile")) {
-		file->outFile = eq;
+		file->overwrite_outfile(val);
 	} else if (!strcmp(arg, "application")) {
-		file->application = eq;
+		file->overwrite_application(val);
 	} else {
 		return false;
 	}
+	*--eq = tmp;
 
 	return true;
 }

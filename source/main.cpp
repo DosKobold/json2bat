@@ -17,6 +17,7 @@ help()
 	    "\t-c, --console\tprint the ouput only to the console\n"
 	    "\t-f, --force\tforce overwriting an existing file\n"
 	    "\t-s, --stdout\tprint the input information formated to the console\n"
+	    "\t\t\tbut still create the batch file\n"
 	    "\t-o, --overwrite\tchange the value of either 'hideshell',\n"
 	    "\t\t\t'outputfile' or 'application' in the generated file.\n"
 	    "\t\t\tOnly a single value can be overwritten at a time.\n"
@@ -33,9 +34,10 @@ int
 main(int argc, char *argv[])
 {
 	bool sflag = false;
-	char *oarg = NULL;
 	int opt;
+	int ret = 0;
 	int option_index = 0;
+	char *ow = nullptr;
 	Converter converter;
 
 	struct option long_options[] = {
@@ -59,12 +61,7 @@ main(int argc, char *argv[])
 				sflag = true;
 				break;
 			case 'o':
-				if (!converter.overwrite(optarg)) {
-					std::cerr << "ERROR: Invalid value for overwrite!" << std::endl;
-					return 1;
-				} else {
-					oarg = optarg;
-				}
+				ow = optarg;
 				break;
 			case 'h':
 				help();
@@ -85,14 +82,16 @@ main(int argc, char *argv[])
 		if (std::filesystem::exists(*argv)) {
 			if (!converter.parse_json(*argv)) {
 				converter.clear_file();
+				ret = 1;
 				continue;
 			}
-			if (oarg) {
-				//THIS IS BAD AS FUCK. FOR EVERY FILE THE SAME ALGORITHM???????!!!!!!!
-				converter.overwrite(oarg);
+			if (ow && !converter.overwrite(ow)) {
+				std::cerr << "ERROR: Invalid value for overwrite" << std::endl;
+				return 1;
 			}
 			if (!converter.write_bat()) {
 				converter.clear_file();
+				ret = 1;
 				continue;
 			}
 			if (sflag) {
@@ -101,9 +100,10 @@ main(int argc, char *argv[])
 			converter.clear_file();
 		} else {
 			std::cerr << "ERROR: [" << *argv << "] The given file does not exist!" << std::endl;
+			ret = 1;
 			continue;
 		}
 	}
 
-	return 0;
+	return ret;
 }
