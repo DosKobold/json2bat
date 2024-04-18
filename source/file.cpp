@@ -76,10 +76,14 @@ File::iterate_commands(std::ostream& out, const std::string& sep, bool skip) con
 }
 
 void
-File::iterate_paths(std::ostream& out, const std::string& sep, const std::string& end) const
+File::iterate_paths(std::ostream& out, const std::string& sep, bool skip) const
 {
 	for (auto path : this->m_paths) {
-		out << sep << path << end;
+		if (!skip) {
+			out << sep;
+		}
+		out << path;
+		skip = false;
 	}
 }
 

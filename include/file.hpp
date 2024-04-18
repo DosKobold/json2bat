@@ -12,7 +12,7 @@ public:
 	/* Formatted output. */
 	void iterate_env(std::ostream&, const std::string&, bool) const;
 	void iterate_commands(std::ostream&, const std::string&, bool) const;
-	void iterate_paths(std::ostream&, const std::string&, const std::string&) const;
+	void iterate_paths(std::ostream&, const std::string&, bool) const;
 	std::string title() const;
 
 	/* Manupulate fields after initial File::fill(). */

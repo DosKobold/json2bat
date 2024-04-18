@@ -104,9 +104,9 @@ Converter::write_bat()
 	}
 	if (file->paths_size() != 0)
 		output << "set path=";
-	file->iterate_paths(output, ";", "");
+	file->iterate_paths(output, ";", true);
 	if (file->paths_size() != 0)
-		output << "\%path\%";
+		output << ";\%path\%";
 
 	/* Take care of application */
 	if (!file->application().empty()) {
@@ -138,7 +138,7 @@ Converter::print_fmt()
 
 	file->iterate_commands(std::cout, "\nEXE   | ", false);
 	file->iterate_env(std::cout, "\nENV   | ", false);
-	file->iterate_paths(std::cout, "\nPATH  | ", "");
+	file->iterate_paths(std::cout, "\nPATH  | ", false);
 	std::cout << std::endl;
 }
 
