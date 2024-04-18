@@ -2,7 +2,7 @@
 +----------+
 
 Year:        2024
-Description: First college project in C++. Generates a bash script out of a json file.
+Description: First college project in C++. Generates a batch script out of a json file.
 Institution: DHBW Ravensburg / Friedrichshafen
 Authors:     Tom Schwindl  <schwindl@posteo.de>
              Paul Stöckle  <paul.stoeckle@t-online.de>
@@ -12,7 +12,10 @@ Authors:     Tom Schwindl  <schwindl@posteo.de>
   Build
 +-------+
 
-To build the project, execute the following commands:
+json2bat requires the JSONCPP library and a standards compliant C++17 compiler
+to work properly. To build and run the project, execute the following commands:
 
-1. cmake -B build
-2. cmake --build build
+1. mkdir build
+2. cmake -B build
+3. cmake --build build
+4. build/json2bat --help
