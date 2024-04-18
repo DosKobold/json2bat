@@ -46,7 +46,7 @@ File::fill(Json::Value& objects, std::string in, std::ostream& errout)
 }
 
 void
-File::iterate_env(std::ostream& out) const
+File::iterate_env(std::ostream& out, const std::string& sep, bool skip) const
 {
 	bool first  = true;
 	auto key    = this->m_keys.begin();
@@ -55,70 +55,31 @@ File::iterate_env(std::ostream& out) const
 	auto valEnd = this->m_values.end();
 
 	for (; key!=keyEnd && val!=valEnd; ++key, ++val) {
-		if (first && m_commands.empty()) {
-			out << "set ";
-		} else {
-			out << " && set ";
+		if (!skip || !first) {
+			out << sep;
 		}
 		out << *key << "=" << *val;
-		first = false;
+		skip = first = false;
 	}
 }
 
 void
-File::iterate_env(std::ostream& out, const std::string& k, const std::string& v) const
+File::iterate_commands(std::ostream& out, const std::string& sep, bool skip) const
 {
-	auto key    = this->m_keys.begin();
-	auto keyEnd = this->m_keys.end();
-	auto val    = this->m_values.begin();
-	auto valEnd = this->m_values.end();
-
-	for (; key!=keyEnd && val!=valEnd; ++key, ++val) {
-		out << k << *key << v << *val << std::endl;
-	}
-}
-
-void
-File::iterate_commands(std::ostream& out) const
-{
-	bool first = true;
-
 	for (auto cmd : this->m_commands) {
-		if (!first) {
-			out << " && ";
+		if (!skip) {
+			out << sep;
 		}
 		out << cmd;
-		first = false;
+		skip = false;
 	}
 }
 
 void
-File::iterate_commands(std::ostream& out, const std::string& sep) const
-{
-	for (auto cmd : this->m_commands) {
-		out << sep << cmd << std::endl;
-	}
-}
-
-void
-File::iterate_paths(std::ostream& out) const
-{
-	if (this->m_paths.empty()) {
-		return;
-	}
-
-	out << " && set path=";
-	for (auto path : this->m_paths) {
-		out << path << ";";
-	}
-	out << "\%path\%";
-}
-
-void
-File::iterate_paths(std::ostream& out, const std::string& sep) const
+File::iterate_paths(std::ostream& out, const std::string& sep, const std::string& end) const
 {
 	for (auto path : this->m_paths) {
-		out << sep << path << std::endl;
+		out << sep << path << end;
 	}
 }
 
@@ -162,4 +123,22 @@ const std::string&
 File::outfile() const
 {
 	return this->m_outFile;
+}
+
+std::size_t
+File::env_size() const
+{
+	return this->m_keys.size();
+}
+
+std::size_t
+File::paths_size() const
+{
+	return this->m_paths.size();
+}
+
+std::size_t
+File::commands_size() const
+{
+	return this->m_commands.size();
 }

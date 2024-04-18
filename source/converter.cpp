@@ -89,13 +89,24 @@ Converter::write_bat()
 	}
 
 	/* Take care of EXE instructions */
-	file->iterate_commands(output);
+	file->iterate_commands(output, " && ", true);
 
 	/* Take care of ENV instructions */
-	file->iterate_env(output);
+	bool b = (file->commands_size() == 0 && file->env_size() > 0);
+	if (b) {
+		output << "set ";
+	}
+	file->iterate_env(output, " && set ", b);
 
 	/* Take care of PATH instructions */
-	file->iterate_paths(output);
+	if (file->commands_size() > 0 && file->env_size() > 0) {
+		output << " && ";
+	}
+	if (file->paths_size() != 0)
+		output << "set path=";
+	file->iterate_paths(output, ";", "");
+	if (file->paths_size() != 0)
+		output << "\%path\%";
 
 	/* Take care of application */
 	if (!file->application().empty()) {
@@ -123,12 +134,12 @@ void
 Converter::print_fmt()
 {
 	std::cout << "Target name: " << file->outfile() << std::endl;
-	std::cout << "Hideshell:   " << std::boolalpha << file->hideshell() \
-	     << std::endl;
+	std::cout << "Hideshell:   " << std::boolalpha << file->hideshell();
 
-	file->iterate_commands(std::cout, "EXE   | ");
-	file->iterate_env(std::cout, "ENV   | ", " ");
-	file->iterate_paths(std::cout, "PATH  | ");
+	file->iterate_commands(std::cout, "\nEXE   | ", false);
+	file->iterate_env(std::cout, "\nENV   | ", false);
+	file->iterate_paths(std::cout, "\nPATH  | ", "");
+	std::cout << std::endl;
 }
 
 bool

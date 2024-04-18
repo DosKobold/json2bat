@@ -10,12 +10,9 @@ class File {
 		bool fill(Json::Value&, std::string, std::ostream&);
 
 		/* Formatted output. */
-		void iterate_env(std::ostream&) const;
-		void iterate_env(std::ostream&, const std::string&, const std::string&) const;
-		void iterate_commands(std::ostream&) const;
-		void iterate_commands(std::ostream&, const std::string&) const;
-		void iterate_paths(std::ostream&) const;
-		void iterate_paths(std::ostream&, const std::string&) const;
+		void iterate_env(std::ostream&, const std::string&, bool) const;
+		void iterate_commands(std::ostream&, const std::string&, bool) const;
+		void iterate_paths(std::ostream&, const std::string&, const std::string&) const;
 		std::string title() const;
 
 		/* Manupulate fields after initial File::fill(). */
@@ -27,6 +24,9 @@ class File {
 		bool hideshell() const;
 		const std::string& application() const;
 		const std::string& outfile() const;
+		std::size_t env_size() const;
+		std::size_t paths_size() const;
+		std::size_t commands_size() const;
 
 	private:
 		std::list<std::string> m_commands;
