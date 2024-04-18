@@ -6,7 +6,7 @@
 #include "file.hpp"
 
 bool
-File::fill(Json::Value& objects, std::string in, std::ostream& errout)
+File::initialize(Json::Value& objects, std::string in, std::ostream& errout)
 {
 	m_inFile = in;
 

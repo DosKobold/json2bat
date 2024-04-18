@@ -7,7 +7,8 @@
 
 class File {
 public:
-	bool fill(Json::Value&, std::string, std::ostream&);
+	/* Initialize class from already parsed JSON file. */
+	bool initialize(Json::Value&, std::string, std::ostream&);
 
 	/* Formatted output. */
 	void iterate_env(std::ostream&, const std::string&, bool) const;

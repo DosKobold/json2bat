@@ -40,7 +40,7 @@ Converter::parse_json(std::string inFile)
 		return false;
 	}
 
-	if (!file->fill(object, inFile, std::cerr)) {
+	if (!file->initialize(object, inFile, std::cerr)) {
 		return false;
 	}
 	return true;
