@@ -134,7 +134,8 @@ void
 Converter::print_fmt()
 {
 	std::cout << "Target name: " << file->outfile() << std::endl;
-	std::cout << "Hideshell:   " << std::boolalpha << file->hideshell();
+	std::cout << "Hideshell:   " << std::boolalpha << file->hideshell() << std::endl;
+	std::cout << "Application: " << file->application();
 
 	file->iterate_commands(std::cout, "\nEXE   | ", false);
 	file->iterate_env(std::cout, "\nENV   | ", false);
