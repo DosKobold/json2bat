@@ -6,14 +6,12 @@
 #include "file.hpp"
 
 bool
-File::initialize(Json::Value& objects, std::string in, std::ostream& errout)
+File::initialize(const Json::Value& objects, const std::string& inFile, std::ostream& errout)
 {
-	m_inFile = in;
-
 	if (objects["outputfile"] && objects["outputfile"] != "") {
 		m_outFile = objects["outputfile"].asString();
 	} else {
-		errout << "ERROR: [" << m_inFile << "] Object \"outputfile\"" \
+		errout << "ERROR: [" << inFile << "] Object \"outputfile\"" \
 		    " does not exist or is empty!" << std::endl;
 		return false;
 	}
@@ -21,7 +19,7 @@ File::initialize(Json::Value& objects, std::string in, std::ostream& errout)
 	if (objects["hideshell"] && objects["hideshell"].isBool()) {
 		m_hideshell = objects["hideshell"].asBool();
 	} else {
-		errout << "ERROR: [" << m_inFile << "] Object \"hideshell\"" \
+		errout << "ERROR: [" << inFile << "] Object \"hideshell\"" \
 		    " does not exist or is no boolean!" << std::endl;
 		return false;
 	}

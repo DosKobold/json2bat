@@ -8,7 +8,7 @@
 class File {
 public:
 	/* Initialize class from already parsed JSON file. */
-	bool initialize(Json::Value&, std::string, std::ostream&);
+	bool initialize(const Json::Value&, const std::string&, std::ostream&);
 
 	/* Formatted output. */
 	void iterate_env(std::ostream&, const std::string&, bool) const;
@@ -35,7 +35,6 @@ private:
 	std::list<std::string> m_values;
 	std::list<std::string> m_paths;
 	Json::Value m_entries;
-	std::string m_inFile;
 	std::string m_outFile;
 	std::string m_application;
 	bool m_hideshell;
