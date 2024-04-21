@@ -106,7 +106,7 @@ Converter::write_bat()
 		output << "set path=";
 	file->iterate_paths(output, ";", true);
 	if (file->paths_size() != 0)
-		output << ";\%path\%";
+		output << ";%path%";
 
 	/* Take care of application */
 	if (!file->application().empty()) {
