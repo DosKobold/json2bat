@@ -99,7 +99,7 @@ Converter::write_bat()
 	file->iterate_env(output, " && set ", b);
 
 	/* Take care of PATH instructions */
-	if (file->commands_size() > 0 || file->env_size() > 0) {
+	if (file->paths_size() != 0 && (file->commands_size() > 0 || file->env_size() > 0)) {
 		output << " && ";
 	}
 	if (file->paths_size() != 0)
