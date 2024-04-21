@@ -61,7 +61,7 @@ Converter::write_bat()
 			std::cin >> yn;
 		} while (yn != 'y' && yn != 'n');
 		if (yn == 'n')
-			return true;
+			return false;
 	}
 
 	/*
