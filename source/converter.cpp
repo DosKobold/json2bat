@@ -26,6 +26,86 @@ Converter::clear_file()
 	file = new File{};
 }
 
+std::size_t
+Converter::get_lineno(std::ifstream& in, std::string inval) const
+{
+	std::size_t lineno;
+	std::string line{};
+
+	/* Make sure no random substring is accidentally matched.*/
+	inval.append("\",").insert(0, "\"");
+
+	/* Reset input stream so the whole file can be read. */
+	in.clear();
+	in.seekg(0, std::ios::beg);
+
+	for (lineno = 1; std::getline(in, line); ++lineno) {
+		if (line.find(inval) != std::string::npos) {
+			break;
+		}
+	}
+	return lineno;
+}
+
+bool
+Converter::check_error(std::ifstream& in, const Json::Value& obj, std::list<std::string> valid) const
+{
+	std::string unequal{};
+
+	/**
+	 * Check array entries for errors.
+	 */
+	if (obj.isArray()) {
+		for (auto arr : obj) {
+			unequal.clear();
+			/* All entries have to start with "type". */
+			if (arr["type"].asString() == "") {
+				std::cout << "ERROR: entries has to start with \"types\"" << \
+				    std::endl;
+				return true;
+			}
+			for (auto str : valid) {
+				/* Name matches and is thus valid. */
+				if (str == arr["type"].asString()) {
+					unequal = str;
+					break;
+				}
+			}
+			/* No match indicates an error. */
+			if (unequal.empty()) {
+				std::cout << "ERROR: [" << arr["type"].asString() << \
+				    "] invalid entry at line " << \
+				    get_lineno(in, arr["type"].asString()) << std::endl;;
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Check normal entries for errors.
+	 */
+	for (auto name : obj.getMemberNames()) {
+		unequal.clear();
+		for (auto str : valid) {
+			/* Name matches and is thus valid. */
+			if (str == name) {
+				unequal = str;
+				break;
+			}
+		}
+		/* No match indicates an error, abort iteration. */
+		if (unequal.empty()) {
+			std::cout << "ERROR: [" << name << "] invalid entry at line " << \
+			    get_lineno(in, name) << std::endl;
+			return true;
+		}
+	}
+
+	/* Zero indicates success. */
+	return unequal.empty();
+}
+
 bool
 Converter::parse_json(std::string inFile)
 {
@@ -40,6 +120,22 @@ Converter::parse_json(std::string inFile)
 		return false;
 	}
 
+	/*
+	 * These lists contain all valid entries that are allowed in the JSON file.
+	 * This way, it's possible to add more fields and functionality without
+	 * needing to change the source in a complicated manner.
+	 */
+	std::list<std::string> root = {"outputfile", "hideshell", "entries", \
+	    "application"};
+	std::list<std::string> entries = {"EXE", "ENV", "PATH"};
+
+	/* Fail on the first invalid entry. */
+	if (check_error(input, object, root)) {
+		return false;
+	}
+	if (check_error(input, object["entries"], entries)) {
+		return false;
+	}
 	if (!file->initialize(object, inFile, std::cerr)) {
 		return false;
 	}
@@ -47,7 +143,7 @@ Converter::parse_json(std::string inFile)
 }
 
 bool
-Converter::write_bat()
+Converter::write_bat() const
 {
 	std::streambuf *sbuf;
 	std::ofstream tmp;
@@ -131,7 +227,7 @@ Converter::force_overwrite(bool b)
 }
 
 void
-Converter::print_fmt()
+Converter::print_fmt() const
 {
 	std::cout << "Target name: " << file->outfile() << std::endl;
 	std::cout << "Hideshell:   " << std::boolalpha << file->hideshell() << std::endl;
@@ -144,7 +240,7 @@ Converter::print_fmt()
 }
 
 bool
-Converter::overwrite(char *arg)
+Converter::overwrite(char *arg) const
 {
 	std::string val;
 	char tmp;

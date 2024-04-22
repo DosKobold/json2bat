@@ -16,7 +16,7 @@ public:
 	void iterate_paths(std::ostream&, const std::string&, bool) const;
 	std::string title() const;
 
-	/* Manupulate fields after initial File::fill(). */
+	/* Manupulate fields after initial File::initialize(). */
 	void overwrite_hideshell(bool);
 	void overwrite_application(std::string);
 	void overwrite_outfile(std::string);
