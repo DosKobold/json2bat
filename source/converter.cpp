@@ -58,7 +58,6 @@ Converter::check_error(std::ifstream& in, const Json::Value& obj, \
 	 */
 	if (obj.isArray()) {
 		for (auto& entry : obj) {
-			unequal.clear();
 			/* Make sure the type is valid [ENV|EXE|PATH]. */
 			type = entry["type"].asString();
 			if (!type.empty() && valid[type] == "") {
@@ -176,12 +175,13 @@ Converter::parse_json(std::string inFile)
 bool
 Converter::write_bat() const
 {
+	bool b;
+	char yn;
 	std::streambuf *sbuf;
 	std::ofstream tmp;
 
 	/* In case the filename already exists, ask if overwriting is okay. */
 	if (std::filesystem::exists(file->outfile()) && !forceOW && writeToFile) {
-		char yn;
 		do {
 			std::cerr << "Overwrite existing file [" << file->outfile() \
 			    << "]? (y/n): ";
@@ -219,7 +219,7 @@ Converter::write_bat() const
 	file->iterate_commands(output, " && ", true);
 
 	/* Take care of ENV instructions */
-	bool b = (file->commands_size() == 0 && file->env_size() > 0);
+	b = (file->commands_size() == 0 && file->env_size() > 0);
 	if (b) {
 		output << "set ";
 	}
@@ -273,16 +273,18 @@ Converter::print_fmt() const
 bool
 Converter::overwrite(char *arg) const
 {
-	std::string val;
+	std::string val{};
 	char tmp;
 	char *eq;
 
-	if (!*arg && *arg != '=')
+	if (!*arg && *arg != '=') {
 		return false;
+	}
 
 	eq = strchr(arg, '=');
-	if (!eq || !eq[1])
+	if (!eq || !eq[1]) {
 		return false;
+	}
 	tmp = *eq;
 	*eq++ = '\0';
 

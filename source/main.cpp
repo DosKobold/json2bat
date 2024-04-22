@@ -79,9 +79,9 @@ main(int argc, char *argv[])
 	}
 
 	for (; *argv; ++argv) {
+		converter.clear_file();
 		if (std::filesystem::exists(*argv)) {
 			if (!converter.parse_json(*argv)) {
-				converter.clear_file();
 				ret = 1;
 				continue;
 			}
@@ -90,20 +90,17 @@ main(int argc, char *argv[])
 				return 1;
 			}
 			if (!converter.write_bat()) {
-				converter.clear_file();
 				ret = 1;
 				continue;
 			}
 			if (sflag) {
 				converter.print_fmt();
 			}
-			converter.clear_file();
 		} else {
 			std::cerr << "ERROR: [" << *argv << "] The given file does not exist!" << std::endl;
 			ret = 1;
 			continue;
 		}
 	}
-
 	return ret;
 }

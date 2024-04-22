@@ -6,7 +6,8 @@
 #include "file.hpp"
 
 bool
-File::initialize(const Json::Value& objects, const std::string& inFile, std::ostream& errout)
+File::initialize(const Json::Value& objects, const std::string& inFile, \
+    std::ostream& errout)
 {
 	if (objects["outputfile"] && objects["outputfile"] != "") {
 		m_outFile = objects["outputfile"].asString();
