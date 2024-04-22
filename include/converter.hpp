@@ -2,6 +2,7 @@
 #define CONVERTER_HPP_
 
 #include <iostream>
+#include <map>
 #include <string>
 #include <jsoncpp/json/json.h>
 
@@ -24,8 +25,9 @@ public:
 	bool overwrite(char *) const;
 
 private:
-	bool check_error(std::ifstream&, const Json::Value&, std::list<std::string>) const;
-	std::size_t get_lineno(std::ifstream&, std::string) const;
+	bool check_error(std::ifstream&, const Json::Value&, \
+	    std::map<std::string, std::string>&) const;
+	std::size_t get_lineno(std::ifstream&, const std::string&) const;
 
 private:
 	Json::Reader reader;

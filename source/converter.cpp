@@ -2,6 +2,7 @@
 #include <fstream>
 #include <iostream>
 #include <list>
+#include <map>
 #include <string>
 #include <jsoncpp/json/json.h>
 
@@ -27,13 +28,10 @@ Converter::clear_file()
 }
 
 std::size_t
-Converter::get_lineno(std::ifstream& in, std::string inval) const
+Converter::get_lineno(std::ifstream& in, const std::string& inval) const
 {
 	std::size_t lineno;
 	std::string line{};
-
-	/* Make sure no random substring is accidentally matched.*/
-	inval.append("\",").insert(0, "\"");
 
 	/* Reset input stream so the whole file can be read. */
 	in.clear();
@@ -48,35 +46,62 @@ Converter::get_lineno(std::ifstream& in, std::string inval) const
 }
 
 bool
-Converter::check_error(std::ifstream& in, const Json::Value& obj, std::list<std::string> valid) const
+Converter::check_error(std::ifstream& in, const Json::Value& obj, \
+     std::map<std::string, std::string>& valid) const
 {
 	std::string unequal{};
+	std::string type{};
+	std::string pattern{};
 
 	/**
 	 * Check array entries for errors.
 	 */
 	if (obj.isArray()) {
-		for (auto arr : obj) {
+		for (auto& entry : obj) {
 			unequal.clear();
-			/* All entries have to start with "type". */
-			if (arr["type"].asString() == "") {
-				std::cout << "ERROR: entries has to start with \"types\"" << \
-				    std::endl;
+			/* Make sure the type is valid [ENV|EXE|PATH]. */
+			type = entry["type"].asString();
+			if (!type.empty() && valid[type] == "") {
+				std::cout << "ERROR: [" << type << "] invalid entry at " \
+				    << "line " << get_lineno(in, type) << std::endl;
 				return true;
 			}
-			for (auto str : valid) {
-				/* Name matches and is thus valid. */
-				if (str == arr["type"].asString()) {
-					unequal = str;
+			for (auto& c : entry.getMemberNames()) {
+				/*
+				 * In case an entry doesn't contain a "type" field, it's
+				 * invalid. To detect a misspelled type-field, insert
+				 * the current key into 'entry' and the resulting value into
+				 * the map holding all valid entry combinations.
+				 * In case the type-field is found, 'entry[c]' results in
+				 * either ENV, EXE or PATH which are valid keys for the
+				 * 'valid' map. Thus resulting in a return value unequal to
+				 * empty string and meeting the condition.
+				 */
+				if (type.empty() && valid[entry[c].asString()] != "") {
+					/* Make sure no random substring is matched.*/
+					pattern.append("\"").append(c).append("\": \"") \
+					    .append(entry[c].asString()).append("\"");
+					std::cout << "ERROR: expected [type] but got [" \
+					    << c << "] at line " << get_lineno(in, pattern) \
+					    << std::endl;
+					return true;
+				}
+				/* Make sure each type is only followed by valid data. */
+				if (!type.empty()) {
+					// TODO: special case, integrate this into the maps.
+					if (valid[type] == "ENV" && c == "value") {
+						break;
+					}
+					if (valid[type] != c) {
+						pattern.append("\"").append(type).append("\", \"") \
+						    .append(c).append("\":");
+						std::cout << "ERROR: expected [" << valid[type] << "]" \
+						    << " but got [" << c << "] at line " \
+						    << get_lineno(in, pattern) << std::endl;
+						return true;
+					}
 					break;
 				}
-			}
-			/* No match indicates an error. */
-			if (unequal.empty()) {
-				std::cout << "ERROR: [" << arr["type"].asString() << \
-				    "] invalid entry at line " << \
-				    get_lineno(in, arr["type"].asString()) << std::endl;;
-				return true;
 			}
 		}
 		return false;
@@ -85,12 +110,12 @@ Converter::check_error(std::ifstream& in, const Json::Value& obj, std::list<std:
 	/**
 	 * Check normal entries for errors.
 	 */
-	for (auto name : obj.getMemberNames()) {
+	for (auto& name : obj.getMemberNames()) {
 		unequal.clear();
-		for (auto str : valid) {
+		for (auto& str : valid) {
 			/* Name matches and is thus valid. */
-			if (str == name) {
-				unequal = str;
+			if (str.first == name) {
+				unequal = str.first;
 				break;
 			}
 		}
@@ -121,13 +146,19 @@ Converter::parse_json(std::string inFile)
 	}
 
 	/*
-	 * These lists contain all valid entries that are allowed in the JSON file.
+	 * These maps contain all valid entries that are allowed in the JSON file.
+	 * They are split into the "normal" entries and "array" entries since both
+	 * need slightly different treatment to function properly.
 	 * This way, it's possible to add more fields and functionality without
 	 * needing to change the source in a complicated manner.
 	 */
-	std::list<std::string> root = {"outputfile", "hideshell", "entries", \
-	    "application"};
-	std::list<std::string> entries = {"EXE", "ENV", "PATH"};
+	std::map<std::string, std::string> root {
+	        {"outputfile", ""}, {"hideshell", ""}, {"entries", ""},
+	        {"application", ""}
+	    };
+	std::map<std::string, std::string> entries {
+	        {"EXE", "command"}, {"ENV", "key"}, {"PATH", "path"}
+	    };
 
 	/* Fail on the first invalid entry. */
 	if (check_error(input, object, root)) {
