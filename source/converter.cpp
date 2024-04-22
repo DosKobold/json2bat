@@ -87,9 +87,19 @@ Converter::check_error(std::string inFile, std::ifstream& in, const Json::Value&
 				}
 				/* Make sure each type is only followed by valid data. */
 				if (!type.empty()) {
-					// TODO: special case, integrate this into the maps.
-					if (valid[type] == "ENV" && c == "value") {
-						break;
+					/* Special case, integrate this into the maps. */
+					if (type == "ENV") {
+						if (c == "type" || c == "command" ||c == "key" ||
+						    c == "value") {
+							continue;
+						} else {
+							pattern.append(", \"").append(c).append("\": ");
+							std::cout << "ERROR: [" << inFile << "] Expected " \
+							    << "\"key/value\" but got \"" << c << "\"" \
+							    << " at line " << get_lineno(in, pattern) \
+							    << std::endl;
+							return true;
+						}
 					}
 					if (valid[type] != c) {
 						pattern.append("\"").append(type).append("\", \"") \
