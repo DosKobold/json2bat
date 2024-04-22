@@ -49,7 +49,7 @@ bool
 Converter::check_error(std::ifstream& in, const Json::Value& obj, \
      std::map<std::string, std::string>& valid) const
 {
-	std::string unequal{};
+	bool unequal;
 	std::string type{};
 	std::string pattern{};
 
@@ -110,24 +110,22 @@ Converter::check_error(std::ifstream& in, const Json::Value& obj, \
 	 * Check normal entries for errors.
 	 */
 	for (auto& name : obj.getMemberNames()) {
-		unequal.clear();
+		unequal = true;
 		for (auto& str : valid) {
 			/* Name matches and is thus valid. */
 			if (str.first == name) {
-				unequal = str.first;
+				unequal = false;
 				break;
 			}
 		}
 		/* No match indicates an error, abort iteration. */
-		if (unequal.empty()) {
+		if (unequal) {
 			std::cout << "ERROR: [" << name << "] invalid entry at line " << \
 			    get_lineno(in, name) << std::endl;
 			return true;
 		}
 	}
-
-	/* Zero indicates success. */
-	return unequal.empty();
+	return false;
 }
 
 bool
