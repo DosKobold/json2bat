@@ -80,9 +80,9 @@ Converter::check_error(std::string inFile, std::ifstream& in, const Json::Value&
 					/* Make sure no random substring is matched.*/
 					pattern.append("\"").append(c).append("\": \"") \
 					    .append(entry[c].asString()).append("\"");
-					std::cout << "ERROR: [" << inFile << "] Expected \"" << type << "\" but got \"" \
-					    << c << "\" at line " << get_lineno(in, pattern) \
-					    << std::endl;
+					std::cout << "ERROR: [" << inFile << "] Expected \"type\"" \
+					    << " but got \"" << c << "\" at line " << \
+					    get_lineno(in, pattern) << std::endl;
 					return true;
 				}
 				/* Make sure each type is only followed by valid data. */
