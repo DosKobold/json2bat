@@ -46,7 +46,7 @@ Converter::get_lineno(std::ifstream& in, const std::string& inval) const
 }
 
 bool
-Converter::check_error(std::ifstream& in, const Json::Value& obj, \
+Converter::check_error(std::string inFile, std::ifstream& in, const Json::Value& obj, \
      std::map<std::string, std::string>& valid) const
 {
 	bool unequal;
@@ -61,8 +61,8 @@ Converter::check_error(std::ifstream& in, const Json::Value& obj, \
 			/* Make sure the type is valid [ENV|EXE|PATH]. */
 			type = entry["type"].asString();
 			if (!type.empty() && valid[type] == "") {
-				std::cout << "ERROR: [" << type << "] invalid entry at " \
-				    << "line " << get_lineno(in, type) << std::endl;
+				std::cout << "ERROR: [" << inFile << "] Invalid entry at " \
+				    << "line " << get_lineno(in, type) << ": " << type << std::endl;
 				return true;
 			}
 			for (auto& c : entry.getMemberNames()) {
@@ -80,8 +80,8 @@ Converter::check_error(std::ifstream& in, const Json::Value& obj, \
 					/* Make sure no random substring is matched.*/
 					pattern.append("\"").append(c).append("\": \"") \
 					    .append(entry[c].asString()).append("\"");
-					std::cout << "ERROR: expected [type] but got [" \
-					    << c << "] at line " << get_lineno(in, pattern) \
+					std::cout << "ERROR: [" << inFile << "] Expected \"" << type << "\" but got \"" \
+					    << c << "\" at line " << get_lineno(in, pattern) \
 					    << std::endl;
 					return true;
 				}
@@ -94,8 +94,8 @@ Converter::check_error(std::ifstream& in, const Json::Value& obj, \
 					if (valid[type] != c) {
 						pattern.append("\"").append(type).append("\", \"") \
 						    .append(c).append("\":");
-						std::cout << "ERROR: expected [" << valid[type] << "]" \
-						    << " but got [" << c << "] at line " \
+						std::cout << "ERROR: [" << inFile <<"] Expected \"" << valid[type] << "\"" \
+						    << " but got \"" << c << "\" at line " \
 						    << get_lineno(in, pattern) << std::endl;
 						return true;
 					}
@@ -120,8 +120,8 @@ Converter::check_error(std::ifstream& in, const Json::Value& obj, \
 		}
 		/* No match indicates an error, abort iteration. */
 		if (unequal) {
-			std::cout << "ERROR: [" << name << "] invalid entry at line " << \
-			    get_lineno(in, name) << std::endl;
+			std::cout << "ERROR: [" << inFile << "] Invalid entry at line " << \
+			    get_lineno(in, name) << ": " << name  << std::endl;
 			return true;
 		}
 	}
@@ -158,10 +158,10 @@ Converter::parse_json(std::string inFile)
 	    };
 
 	/* Fail on the first invalid entry. */
-	if (check_error(input, object, root)) {
+	if (check_error(inFile, input, object, root)) {
 		return false;
 	}
-	if (check_error(input, object["entries"], entries)) {
+	if (check_error(inFile, input, object["entries"], entries)) {
 		return false;
 	}
 	if (!file->initialize(object, inFile, std::cerr)) {

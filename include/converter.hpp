@@ -25,7 +25,7 @@ public:
 	bool overwrite(char *) const;
 
 private:
-	bool check_error(std::ifstream&, const Json::Value&, \
+	bool check_error(std::string, std::ifstream&, const Json::Value&, \
 	    std::map<std::string, std::string>&) const;
 	std::size_t get_lineno(std::ifstream&, const std::string&) const;
 

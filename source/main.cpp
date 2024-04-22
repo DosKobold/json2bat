@@ -86,7 +86,7 @@ main(int argc, char *argv[])
 				continue;
 			}
 			if (ow && !converter.overwrite(ow)) {
-				std::cerr << "ERROR: Invalid value for overwrite" << std::endl;
+				std::cerr << "ERROR: [" << *argv << "] Invalid value for overwrite" << std::endl;
 				return 1;
 			}
 			if (!converter.write_bat()) {
